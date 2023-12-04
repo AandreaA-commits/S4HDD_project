@@ -1,0 +1,16 @@
+ANNI PRESI IN CONSIDERAZIONE -> 
+
+Abbiamo 13 stazioni in comune tra le misurazioni meteo e misurazioni pollutant.
+Le stazioni di misurazione del traffico non coincidono ne con stazioni meteo ne con stazioni pollutant.
+
+XBeta:
+	altitudine OK
+	dati traffico OK
+	
+Y:
+	Inquinanti (più di uno) OK
+	Meteo (più di uno) OK
+
+
+
+NB:  aggiungere agli XBeta una variabile che indica se il giorno fa parte del weekend.
