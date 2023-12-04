@@ -7,3 +7,10 @@ dati_traffico_ready.csv
 		La prima colonna è quindi i dati dalle ore 00 alle 01 AM. Mentre la 24esima colonna sono i dati dalle ore 11 alle 12 PM.
 
 	- INFO -> Ciascuna misurazione include il traffico (misurato in numero di veicoli) in entrambi i sensi di marcia per quella strada.
+
+dataset_meteo_2019.mat
+	- RIGHE -> ci sono le covariate meteo
+	- COLONNE -> ci sono i mesi
+	- INFO -> Ciascuna casella contiene una matrice che contiene le misurazioni mensili delle stazioni per il pollutant indicato nella riga:
+		- RIGHE -> stazioni di misurazione
+		- COLONNE -> misurazioni orarie del mese
