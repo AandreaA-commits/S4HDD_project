@@ -14,3 +14,23 @@ Y:
 
 
 NB:  aggiungere agli XBeta una variabile che indica se il giorno fa parte del weekend.
+
+
+COME IMPOSTARE D_STEM
+Per ogni Y che abbiamo ovvero noi faremo al massimo 3 avremo 1 tabella con le relative stazioni.
+Le 3 Y possono avere stazioni che non sono nella stessa posizione, però devono avre lo stesso numero di osservazioni temporali (anche riempiti con NaN nel caso).
+
+Quindi per ogni pollutant avremo bisogno di una matrice in cui per ogni riga abbiamo una stazione e per ogni colonna una osservazione temporale.
+
+Per ogni covariata X_beta associata ad una Y (una delle 3) dobbiamo avere la stessa struttura della Y corrispondente, quindi tutte le stazioni devono coincidere dal punto di vista
+delle stazioni (es. se Y_O3 ha 3 stazioni in (40, 30), (45, 12) e (50, 15) anche la covariata X_elevazione deve avere osservazioni temporali in (40, 30), (45, 12) e (50, 15)).
+
+Possiamo anche avere diverso numero di covariate per ogni Y l'unico vincoloche rimane è il precedente.
+
+Volendo possiamo aggiungere nelle X_beta un vettore di variabili dummy che rappresentano la possibilità di introdurre il weekend o festività o roba delgenere, (posiamo far vedere la differenza)
+
+
+X_zeta è sempre un vettore di ones, (uno per ogni stazione nella Y) quindi noi ne avremo 3 (tra le Y possiamo avere anche numero di stazioni e posizioni delle stazioni diverse).
+
+Le coordinates in ground.coordinates, dobbiamo mettere le coordinate di ciascuna stazione presente all'interno di ciascuna Y, quindi noi avremo 3 set di coordinate.
+In coordinates devo metterci [lat, long].
