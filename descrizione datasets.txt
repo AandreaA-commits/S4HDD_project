@@ -1,2 +1,12 @@
-DESCRIZIONE DATASETS
+dati_traffico_2019.mat
+	- RIGHE -> stazioni, la stazione 35 è stata rimossa dato che non ha misurazioni
+	- COLONNE -> id_stazione, latitudine, longitudine,  misurazioni_orarie. Ho 24 misurazioni al giorno per un anno 24x365 = 8760.
+	- INFO -> Ciascuna misurazione include il traffico (misurato in numero di veicoli) in entrambi i sensi di marcia per quella strada.
 
+dati_meteo_2019.mat
+	- RIGHE -> variabili meteo misurate
+	- COLONNE -> mesi. Ciascuna cella contiene una struttura che contiene: come righe le stazioni che misurano quella variabile in quel mese e come 
+		colonne: id_stazione, latitudine, longitudine, misurazioni orarie del mese.
+	- INFO -> Le misurazioni mancanti sono state sostituite con dei NaN.
+
+		

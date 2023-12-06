@@ -245,7 +245,7 @@ totaleraw{6,1} = anno2023raw;
 %%
 
 totale = [];
-for idxanno = 1:6
+for idxanno = 2:2
     anno = [];
     for idxmese = 1:height(totaleraw{idxanno,1})
         data = totaleraw{idxanno,1}{idxmese,1};
@@ -269,7 +269,20 @@ for idxanno = 1:6
     end
     totale = [totale anno];
 end
+
+
+dati_stazioni_raw = readtable("./traffico_madrid_raw/UbicacionEstacionesPermanentes.csv")
+
+location_stazioni = dati_stazioni_raw(1:34, 3:end);
+location_stazioni = [location_stazioni; dati_stazioni_raw(36:end, 3:end)];
+nomi_stazioni = unique(totaleraw{2,1}{1,1}.FEST);
+
+totale = [table2array(location_stazioni) totale];
+totale = [string(nomi_stazioni) totale];
+
+save("dati_traffico_2019.mat", "totale")
+
 %%
-writematrix(totale,'dati_traffico_ready.csv');
+%writematrix(totale,'dati_traffico_pronti.csv');
 
 
