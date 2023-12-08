@@ -25,8 +25,6 @@ Quindi per ogni pollutant avremo bisogno di una matrice in cui per ogni riga abb
 Per ogni covariata X_beta associata ad una Y (una delle 3) dobbiamo avere la stessa struttura della Y corrispondente, quindi tutte le stazioni devono coincidere dal punto di vista
 delle stazioni (es. se Y_O3 ha 3 stazioni in (40, 30), (45, 12) e (50, 15) anche la covariata X_elevazione deve avere osservazioni temporali in (40, 30), (45, 12) e (50, 15)).
 
-Possiamo anche avere diverso numero di covariate per ogni Y l'unico vincoloche rimane è il precedente.
-
 Volendo possiamo aggiungere nelle X_beta un vettore di variabili dummy che rappresentano la possibilità di introdurre il weekend o festività o roba delgenere, (posiamo far vedere la differenza)
 
 
