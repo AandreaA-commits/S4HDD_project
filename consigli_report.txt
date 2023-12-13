@@ -1,0 +1,16 @@
+- non mettere immagini di cui non si leggono numeri / parole (sia nel report che nella presentazione)
+- se ho latitudine e longitudine, la variabile dello spazio s nella formula HDGM appartiene ad una sfera
+- non fare errori di grammatica o di notazione, grassetti
+
+- stare attenti, se abbiamo un trend usare il tempo come covariata o altrimenti si deve rimuovere il trend (modello delle differenze)
+- controllare che la z sia stazionaria e non abbia trend (nel tempo)
+- aggiungere le unità di misura (RMSE)
+- fare un modello autoregressivo senza la varaibile latente fuori da dstem
+- mostrare nelle tabelle il valore di theta
+
+- dopo stima modello, mostrarre theta, parametri del modello e poi i risultati della validazione. Controllo prima i beta se c'è qualcosa di non
+	significativo lo rimuovo e poi faccio validazione
+
+- grafico correlazione dei residui (con mappa. Per essere incorrelati devono essere sparsi e con colori diversi (quasi random sulla mappa)
+ 	Il modello potrebbe comunque avere residui correlati nello spazio.
+	Per controllare la correlazione residui usare il variogramma.
