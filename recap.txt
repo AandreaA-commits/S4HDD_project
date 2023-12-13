@@ -32,3 +32,16 @@ X_zeta è sempre un vettore di ones, (uno per ogni stazione nella Y) quindi noi 
 
 Le coordinates in ground.coordinates, dobbiamo mettere le coordinate di ciascuna stazione presente all'interno di ciascuna Y, quindi noi avremo 3 set di coordinate.
 In coordinates devo metterci [lat, long].
+
+VALIDAZIONE MULTIVARIATO
+Per fare validazione dobbiamo stare attenti a calcolare per ogni stazione di validazione solo la y che è osservata:
+Fra e Nick hanno trovato direttamente le stazioni che misurano tutte le y e non si sono preoccupati di questo... noi non penso che possiamo farlo dato che molte stazioni non misurano tutte le
+y e quindi rischia che venga fuori un set di validazione che è troppo piccolo.
+
+Quello che dobbiamo fare noi è che per ogni y che usiamo dobbiamo fare una divisione in dataset di train e test... stimiamo il modello su quello di train e facciamo il kriging sui punti nel dataset di test
+poi le y_hat che ci vengono fuori calcolando in quei punti usando i parametri stimati le confrontiamo con y_misurate (err = y_misurate - y_hat).
+Quidni avremo un vettore err (lungo tante quante y utilizziamo nel modello es- 3 se tri variato) che contiene per ogni riga (lunga tante quante stazioni di test abbiamo per quella y) e dovremo fare una media 
+(magari sotto radice quadrata).
+
+LE STAZIONI DI TEST VANNO PRESE CASUALMENTE (bisogna cercare di non avere vicine perchè così non abbiamo troppa correlazione spaziale tra le due).
+IL VALORE MISURATO DEVE ESSERE PRESENTE QUINDI è MEGLIO SE SCEGLIAMO STAZIONI CON MISURE NON NaN (ma non è la parte strettamente obbligatoria.)
