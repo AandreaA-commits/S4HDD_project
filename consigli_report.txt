@@ -8,9 +8,22 @@
 - fare un modello autoregressivo senza la varaibile latente fuori da dstem
 - mostrare nelle tabelle il valore di theta
 
-- dopo stima modello, mostrarre theta, parametri del modello e poi i risultati della validazione. Controllo prima i beta se c'è qualcosa di non
+- dopo stima modello, mostrare theta, parametri del modello e poi i risultati della validazione. Controllo prima i beta se c'è qualcosa di non
 	significativo lo rimuovo e poi faccio validazione
 
 - grafico correlazione dei residui (con mappa. Per essere incorrelati devono essere sparsi e con colori diversi (quasi random sulla mappa)
  	Il modello potrebbe comunque avere residui correlati nello spazio.
 	Per controllare la correlazione residui usare il variogramma.
+
+PRESENTAZIONE VINCI-VEDO
+- ricordars di quando creiuna dummy variable di levarne una perchè è una combinazione lineare delle precedenti (noi non dovremmo averne).
+
+- discutere del valore di theta il valore di theta è in deg che corrisponde a circa 100*val_theta_deg = misura in km
+
+- ricordati nelle colour bar di aggiungere l'unitàdi misura
+
+- attenzione alla dimensionalità di s e ingenerale alle cose del modello
+
+- coefficienti allineti a destraaa
+
+- 
