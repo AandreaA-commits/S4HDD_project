@@ -715,14 +715,24 @@ obj_stem_model.set_logL;
 
 obj_stem_model.print; 
 
+d = sqrt(diag(obj_stem_model.stem_par.v_z).*eye(7));
+R = inv(d)*obj_stem_model.stem_par.v_z*inv(d);
+
+
+obj_stem_model_copy = struct(obj_stem_model);
+obj_stem_model1 = stem_model(obj_stem_model);
+
+
 
 %% Kriging on validation stations
 obj_stem_model_pm25 = obj_stem_model;
 obj_stem_model_nox = obj_stem_model;
 
 
+
+
 % KRINGING NOX
-krig_coordinates = [NOx_lat(indici_righe_test1, :), NOx_long(indici_righe_test1, :)];
+krig_coordinates = [NOx_lat(indici_righe_test1), NOx_long(indici_righe_test1)];
 
 obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point',[], 'square', 0.001, 0.001);
 
@@ -735,11 +745,12 @@ for i=1:size(is_weekend,2)
     else
         X_krig(:,1,i) = ones(size(krig_coordinates, 1),1);
     end
-    X_krig(:,2,i) = ones(size(krig_coordinates, 1),1);
+    X_krig(:,2,i) = NOx_lat(indici_righe_test1);
+    X_krig(:,3,i) = NOx_long(indici_righe_test1);   
 end
 
 
-obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, X_krig, {'weekend', 'constant'});
+obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, X_krig, {'weekend', 'lat', 'long'});
 obj_stem_krig = stem_krig(obj_stem_model_nox,obj_stem_krig_data);
 
 obj_stem_krig_options = stem_krig_options();
