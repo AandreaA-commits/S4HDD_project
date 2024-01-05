@@ -487,36 +487,54 @@ NOx_lat = NOX{1,1}{:,3};
 NOx_long = NOX{1,1}{:,4};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n1, 1, T);
+X_krig = zeros(size(dati_test_NOX, 1), 1, T);
 for i=1:size(is_weekend,2)
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n1,1);
+        X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
     else
         X(:,1,i) = ones(n1,1);
+        X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
     end 
     X(:,2,i) = NOx_lat(indici_righe_train1);
-    X(:,3,i) = NOx_long(indici_righe_train1);    
+    X(:,3,i) = NOx_long(indici_righe_train1);  
+    X_krig(:,2,i) = NOx_lat(indici_righe_test1);
+    X_krig(:,3,i) = NOx_long(indici_righe_test1);
+    X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1);    
 end
 ground.X_beta{1} = X;
 ground.X_beta_name{1} = {'weekend', 'lat', 'long'};
+ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant'};
+ground.X_beta_krig{1} = X_krig;
+
+
 
 
 PM25_lat = PM25{1,1}{:,3};
 PM25_long = PM25{1,1}{:,4};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n2, 1, T);
+X_krig = zeros(size(dati_test_PM25, 1), 1, T);
 for i=1:size(is_weekend,2)
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n2,1);
+        X_krig(:,1,i) = zeros(size(dati_test_PM25, 1),1);      
     else
         X(:,1,i) = ones(n2,1);
+        X_krig(:,1,i) = ones(size(dati_test_PM25, 1),1);        
     end
     X(:,2,i) = PM25_lat(indici_righe_train2);
-    X(:,3,i) = PM25_long(indici_righe_train2);  
+    X(:,3,i) = PM25_long(indici_righe_train2);
+    X_krig(:,2,i) = PM25_lat(indici_righe_test2);
+    X_krig(:,3,i) = PM25_long(indici_righe_test2); 
+    X_krig(:,4,i) = ones(size(dati_test_PM25, 1),1); 
 end
 ground.X_beta{2} = X;
 ground.X_beta_name{2} = {'weekend', 'lat', 'long'};
+ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant'};
+ground.X_beta_krig{2} = X_krig;
 
 
 TEMPERATURA_lat = TEMPERATURA{1,1}{:,2};
@@ -529,7 +547,7 @@ for i=1:size(is_weekend,2)
 end
 ground.X_beta{3} = X;
 ground.X_beta_name{3} = {'lat', 'long'};
-
+ground.X_beta_krig{3} = X;
 
 UMIDITA_lat = UMIDITA{1,1}{:,2};
 UMIDITA_long = UMIDITA{1,1}{:,3};
@@ -541,6 +559,7 @@ for i=1:size(is_weekend,2)
 end
 ground.X_beta{4} = X;
 ground.X_beta_name{4} = {'lat', 'long'};
+ground.X_beta_krig{4} = X;
 
 
 VEL_VENTO_lat = VEL_VENTO{1,1}{:,2};
@@ -553,6 +572,7 @@ for i=1:size(is_weekend,2)
 end
 ground.X_beta{5} = X;
 ground.X_beta_name{5} = {'lat', 'long'};
+ground.X_beta_krig{5} = X;
 
 
 PRECIPITAZIONI_lat = PRECIPITAZIONI{1,1}{:,2};
@@ -565,6 +585,7 @@ for i=1:size(is_weekend,2)
 end
 ground.X_beta{6} = X;
 ground.X_beta_name{6} = {'lat', 'long'};
+ground.X_beta_krig{6} = X;
 
 PRESSIONE_lat = PRESSIONE{1,1}{:,2};
 PRESSIONE_long = PRESSIONE{1,1}{:,3};
@@ -576,6 +597,7 @@ for i=1:size(is_weekend,2)
 end
 ground.X_beta{7} = X;
 ground.X_beta_name{7} = {'lat', 'long'};
+ground.X_beta_krig{7} = X;
 
 
 %X_z
@@ -719,17 +741,9 @@ d = sqrt(diag(obj_stem_model.stem_par.v_z).*eye(7));
 R = inv(d)*obj_stem_model.stem_par.v_z*inv(d);
 
 
-obj_stem_model_copy = struct(obj_stem_model);
-obj_stem_model1 = stem_model(obj_stem_model);
-
 
 
 %% Kriging on validation stations
-obj_stem_model_pm25 = obj_stem_model;
-obj_stem_model_nox = obj_stem_model;
-
-
-
 
 % KRINGING NOX
 krig_coordinates = [NOx_lat(indici_righe_test1), NOx_long(indici_righe_test1)];
@@ -750,8 +764,8 @@ for i=1:size(is_weekend,2)
 end
 
 
-obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, X_krig, {'weekend', 'lat', 'long'});
-obj_stem_krig = stem_krig(obj_stem_model_nox,obj_stem_krig_data);
+obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1}, ground.X_beta_name_krig{1});
+obj_stem_krig = stem_krig(obj_stem_model, obj_stem_krig_data);
 
 obj_stem_krig_options = stem_krig_options();
 obj_stem_krig_options.block_size = 1000;
@@ -766,6 +780,10 @@ rmse_nox = [];
 r2_nox = [];
 
 for i = 1:size(y_hat_nox(:,1), 1)
+    res = (dati_test_NOX(i,:)) - y_hat_nox(i,:);
+    
+
+
     mse = 0;
     sp = 0;
     for j = 1:size(y_hat_nox(1,:), 2)
@@ -777,11 +795,15 @@ for i = 1:size(y_hat_nox(:,1), 1)
     rmse_nox = [rmse_nox sqrt(mse / size(y_hat_nox(1,:), 2))];
     r2_nox = [r2_nox 1-(mse / sp)];
 end
+
+
+
 rmse_nox
 r2_nox
 rmse_tot_nox = mean(rmse_nox);
 mean(r2_nox)
 
+%%
 
 % KRINGING PM25
 krig_coordinates = [PM25_lat(indici_righe_test2, :), PM25_long(indici_righe_test2, :)];
@@ -801,8 +823,8 @@ for i=1:size(is_weekend,2)
 end
 
 
-obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, X_krig, {'weekend', 'constant'});
-obj_stem_krig = stem_krig(obj_stem_model_pm25,obj_stem_krig_data);
+obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{2}, ground.X_beta_name_krig{2});
+obj_stem_krig = stem_krig(obj_stem_model, obj_stem_krig_data);
 
 obj_stem_krig_options = stem_krig_options();
 obj_stem_krig_options.block_size = 1000;
@@ -832,6 +854,8 @@ rmse_pm25
 r2_pm25
 rmse_tot_pm25 = mean(rmse_pm25);
 mean(r2_pm25)
+
+
 
 
 
