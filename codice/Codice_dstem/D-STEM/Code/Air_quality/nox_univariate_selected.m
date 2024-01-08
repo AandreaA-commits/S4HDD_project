@@ -240,9 +240,6 @@ obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 %calcolo dell'RMSE e R2
 y_hat = obj_stem_krig_result{1}.y_hat;
 
-
-
-
 % prendiamo le y originali
 
 r2 = [];
@@ -275,6 +272,9 @@ mean(r2)
 % KRIGING GRID COMPLETA
 krig_coordinates_lat = 40.30:0.00235:40.7;
 krig_coordinates_long = -3.9:0.00235:-3.5;
+krig_coordinates_lat = krig_coordinates_lat(:,1:3:end) % 57 valori
+krig_coordinates_long = krig_coordinates_long(:,1:3:end)
+
 [LON,LAT] = meshgrid(krig_coordinates_long,krig_coordinates_lat');
 krig_coordinates = [LAT(:) LON(:)];
 
@@ -283,10 +283,10 @@ a = load("..\..\..\..\krig_coordinates_csv.csv");
 
 X_krig = zeros(size(LAT, 1)*size(LON,1), 1, T);
 for i=1:T    
-    X_krig(:,1,i) = a(:,1);
-    X_krig(:,2,i) = a(:,2);
+    X_krig(:,1,i) = a(1:9:end,1);
+    X_krig(:,2,i) = a(1:9:end,2);
     X_krig(:,3,i) = ones(size(LAT, 1)*size(LON,1), 1);  
-    X_krig(:,4,i) = a(:,3);  
+    X_krig(:,4,i) = a(1:9:end,3);  
 end
 ground.X_beta_name_krig{1} = {'lat', 'long', 'constant', 'alt'};
 ground.X_beta_krig{1} = X_krig;
@@ -301,7 +301,10 @@ obj_stem_krig_options.block_size = 1000;
 clear ground
 
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
+figure;
+contourfm(krig_coordinates_lat, krig_coordinates_long, obj_stem_krig_result{1}.y_hat(:,:,1))  
 
 
-
-
+yhat_reshape = reshape(obj_stem_krig_result{1}.y_hat(:,:,1),57*57,1)
+plot(yhat_reshape)
+s = geoscatter(krig_coordinates(:,1), krig_coordinates(:,2), yhat_reshape, yhat_reshape,'filled')
