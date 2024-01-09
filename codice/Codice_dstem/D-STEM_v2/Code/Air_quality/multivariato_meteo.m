@@ -1,24 +1,14 @@
 clc
 clearvars
 
-%{
-repositoryPath = fullfile(pwd, 'GitHub\S4HDD_project\codice');
-addpath(genpath(repositoryPath));
-
-nomeFile = 'dati_meteo_2019.mat';
-
-percorsoCompleto = fullfile(repositoryPath, nomeFile);
-
-load(percorsoCompleto);
-%}
-
 %% setup dei dati
-%addpath('C:\Users\arici\Documents\GitHub\S4HDD_project\codice\Codice_dstem\D-STEM\Src'); %D-STEM
 addpath('../../Src'); %D-STEM
 a = load("..\..\..\..\dati_pollutants_e_scraper\dati_pollutants_2019.mat");
 dati_pollutants_2019 = a.dati_meteo_2019;
 load ..\..\..\..\dati_traffico_2019.mat
 load ..\..\..\..\dati_meteo_2019.mat
+
+rng(4);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 %      Data  building     %
@@ -26,13 +16,11 @@ load ..\..\..\..\dati_meteo_2019.mat
 
 NOX = dati_pollutants_2019(7, 2:end);
 PM25 = dati_pollutants_2019(5, 2:end);
-BEN = dati_pollutants_2019(10, 2:end);
 
 VEL_VENTO = dati_meteo_2019(2, 2:end)
-PRECIPITAZIONI = dati_meteo_2019(8, 2:end)
 UMIDITA = dati_meteo_2019(5, 2:end)
 TEMPERATURA = dati_meteo_2019(4, 2:end)
-
+PRESSIONE = dati_meteo_2019(6, 2:end)
 
 
 %% RIMOZIONE STAZIONI CHE NON HANNO MISURAZIONI IN TUTTI I MESI DELLA ANNO
@@ -62,6 +50,7 @@ for mese = 1:12
         disp("COCK")
     end
 end
+
 % NOX
 min_col = size(NOX{1,1},1);
 col = 1;
@@ -85,33 +74,6 @@ for mese = 1:12
     if ~size(temp,1) == 0         
         rowremove = ~(table2array(NOX{1,mese}(:,1)) == table2array(temp(:,1)));
         NOX{1,mese} = NOX{1,mese}(rowremove, :);       
-        disp("COCK")
-    end
-end
-
-% BEN
-min_col = size(BEN{1,1},1);
-col = 1;
-for iii = 2:12
-    if min_col > size(BEN{1,iii},1)
-        min_col = size(BEN{1,iii},1);
-        col = iii;
-    end
-end
-
-stazioni_comuni = unique(BEN{1,col}(:,1));
-for mese = 1:12
-    stazioni_mese = unique(BEN{1,mese}(:,1));
-    temp = [];
-    for row = 1: size(BEN{1,mese}, 1)
-        if ~ismember(BEN{1,mese}(row,1), stazioni_comuni)
-            disp("COCCO")
-            temp = [temp; BEN{1,mese}(row, :)];
-        end
-    end
-    if ~size(temp,1) == 0         
-        rowremove = ~(table2array(BEN{1,mese}(:,1)) == table2array(temp(:,1)));
-        BEN{1,mese} = BEN{1,mese}(rowremove, :);       
         disp("COCK")
     end
 end
@@ -140,59 +102,6 @@ for mese = 1:12
         rowremove = ~(table2array(VEL_VENTO{1,mese}(:,1)) == table2array(temp(:,1)));
         VEL_VENTO{1,mese} = VEL_VENTO{1,mese}(rowremove, :);       
         disp("COCK")
-    end
-end
-
-% PRECIPITAZIONI
-min_col = size(PRECIPITAZIONI{1,1},1);
-col = 1;
-for iii = 2:12
-    if min_col > size(PRECIPITAZIONI{1,iii},1)
-        min_col = size(PRECIPITAZIONI{1,iii},1);
-        col = iii;
-    end
-end
-
-stazioni_comuni = unique(PRECIPITAZIONI{1,col}(:,1));
-for mese = 1:12
-    stazioni_mese = unique(PRECIPITAZIONI{1,mese}(:,1));
-    temp = [];
-    for row = 1: size(PRECIPITAZIONI{1,mese}, 1)
-        if ~ismember(PRECIPITAZIONI{1,mese}(row,1), stazioni_comuni)
-            disp("COCCO")
-            temp = [temp; PRECIPITAZIONI{1,mese}(row, :)];
-        end
-    end
-    if ~size(temp,1) == 0         
-        rowremove = ~(table2array(PRECIPITAZIONI{1,mese}(:,1)) == table2array(temp(1,1)));
-        PRECIPITAZIONI{1,mese} = PRECIPITAZIONI{1,mese}(rowremove, :); 
-        rowremove
-        disp("COCK")       
-    end
-end
-min_col = size(PRECIPITAZIONI{1,1},1);
-col = 1;
-for iii = 2:12
-    if min_col > size(PRECIPITAZIONI{1,iii},1)
-        min_col = size(PRECIPITAZIONI{1,iii},1);
-        col = iii;
-    end
-end
-stazioni_comuni = unique(PRECIPITAZIONI{1,col}(:,1));
-for mese = 1:12
-    stazioni_mese = unique(PRECIPITAZIONI{1,mese}(:,1));
-    temp = [];
-    for row = 1: size(PRECIPITAZIONI{1,mese}, 1)
-        if ~ismember(PRECIPITAZIONI{1,mese}(row,1), stazioni_comuni)
-            disp("COCCO")
-            temp = [temp; PRECIPITAZIONI{1,mese}(row, :)];
-        end
-    end
-    if ~size(temp,1) == 0         
-        rowremove = ~(table2array(PRECIPITAZIONI{1,mese}(:,1)) == table2array(temp(1,1)));
-        PRECIPITAZIONI{1,mese} = PRECIPITAZIONI{1,mese}(rowremove, :); 
-        rowremove
-        disp("COCK")       
     end
 end
 
@@ -249,6 +158,58 @@ for mese = 1:12
     end
 end
 
+% PRESSIONE
+min_col = size(PRESSIONE{1,1},1);
+col = 1;
+for iii = 2:12
+    if min_col > size(PRESSIONE{1,iii},1)
+        min_col = size(PRESSIONE{1,iii},1);
+        col = iii;
+    end
+end
+
+stazioni_comuni = unique(PRESSIONE{1,col}(:,1));
+for mese = 1:12
+    stazioni_mese = unique(PRESSIONE{1,mese}(:,1));
+    temp = [];
+    for row = 1: size(PRESSIONE{1,mese}, 1)
+        if ~ismember(PRESSIONE{1,mese}(row,1), stazioni_comuni)
+            disp("COCCO")
+            temp = [temp; PRESSIONE{1,mese}(row, :)];
+        end
+    end
+    if ~size(temp,1) == 0         
+        rowremove = ~(table2array(PRESSIONE{1,mese}(:,1)) == table2array(temp(1,1)));
+        PRESSIONE{1,mese} = PRESSIONE{1,mese}(rowremove, :); 
+        rowremove
+        disp("COCK")       
+    end
+end
+min_col = size(PRESSIONE{1,1},1);
+col = 1;
+for iii = 2:12
+    if min_col > size(PRESSIONE{1,iii},1)
+        min_col = size(PRESSIONE{1,iii},1);
+        col = iii;
+    end
+end
+stazioni_comuni = unique(PRESSIONE{1,col}(:,1));
+for mese = 1:12
+    stazioni_mese = unique(PRESSIONE{1,mese}(:,1));
+    temp = [];
+    for row = 1: size(PRESSIONE{1,mese}, 1)
+        if ~ismember(PRESSIONE{1,mese}(row,1), stazioni_comuni)
+            disp("COCCO")
+            temp = [temp; PRESSIONE{1,mese}(row, :)];
+        end
+    end
+    if ~size(temp,1) == 0         
+        rowremove = ~(table2array(PRESSIONE{1,mese}(:,1)) == table2array(temp(1,1)));
+        PRESSIONE{1,mese} = PRESSIONE{1,mese}(rowremove, :); 
+        rowremove
+        disp("COCK")       
+    end
+end
 
 % UMIDITA
 min_col = size(UMIDITA{1,1},1);
@@ -277,17 +238,12 @@ for mese = 1:12
     end
 end
 
-
-
-
-
 dati_NOX = [];
 dati_PM25 = [];
 dati_VELVENTO = [];
-dati_PRECIPITAZIONI = [];
 dati_UMIDITA = [];
 dati_TEMPERATURA = [];
-
+dati_PRESSIONE = [];
 
 
 for i = 1:size(NOX, 2)
@@ -298,28 +254,31 @@ for i = 1:size(NOX, 2)
     % pm2.5
     tabella_corrente = PM25{1, i};
     colonne_numeriche = tabella_corrente{:, 5:end};
-    dati_PM25 = [dati_PM25 colonne_numeriche];
-    
+    dati_PM25 = [dati_PM25 colonne_numeriche];    
     % VEL VENTO
     tabella_corrente = VEL_VENTO{1, i};
-    colonne_numeriche = tabella_corrente{:, 4:end};
-    dati_VELVENTO = [dati_VELVENTO colonne_numeriche];
-    % PRECIPITAZIONI
-    tabella_corrente = PRECIPITAZIONI{1, i};
-    colonne_numeriche = tabella_corrente{:, 4:end};
-    dati_PRECIPITAZIONI = [dati_PRECIPITAZIONI colonne_numeriche];
+    colonne_numeriche = tabella_corrente{:, 5:end};
+    dati_VELVENTO = [dati_VELVENTO colonne_numeriche];   
     % UMIDITA
     tabella_corrente = UMIDITA{1, i};
-    colonne_numeriche = tabella_corrente{:, 4:end};
+    colonne_numeriche = tabella_corrente{:, 5:end};
     dati_UMIDITA = [dati_UMIDITA colonne_numeriche];
     % TEMPERATURA
     tabella_corrente = TEMPERATURA{1, i};
-    colonne_numeriche = tabella_corrente{:, 4:end};
+    colonne_numeriche = tabella_corrente{:, 5:end};
     dati_TEMPERATURA = [dati_TEMPERATURA colonne_numeriche];
+    % PRESSIONE
+    tabella_corrente = PRESSIONE{1, i};
+    colonne_numeriche = tabella_corrente{:, 5:end};
+    dati_PRESSIONE = [dati_PRESSIONE colonne_numeriche];
 end
 
-
-%traffico = str2_noxdouble(totale(:, 4:end));
+dati_PM25 = dati_PM25(:,14:24:end)  
+dati_NOX = dati_NOX(:,14:24:end)  
+dati_VELVENTO = dati_VELVENTO(:,14:24:end)  
+dati_UMIDITA= dati_UMIDITA(:,14:24:end)  
+dati_TEMPERATURA = dati_TEMPERATURA(:,14:24:end)  
+dati_PRESSIONE = dati_PRESSIONE(:,14:24:end)  
 
 % creazione vettore covariata is_weekend
 % 1 gennaio 2019 era martedì
@@ -347,8 +306,7 @@ ns2 = size(dati_PM25, 1);
 ns3= size(dati_TEMPERATURA, 1); 
 ns4 = size(dati_UMIDITA, 1); 
 ns5 = size(dati_VELVENTO, 1); 
-ns6 = size(dati_PRECIPITAZIONI, 1); 
-
+ns6 = size(dati_PRESSIONE, 1); 
 
 
 % Specifica la percentuale desiderata di righe da estrarre
@@ -362,15 +320,20 @@ numero_righe4 = round(percentuale_righe * ns4);
 numero_righe5 = round(percentuale_righe * ns5);
 numero_righe6 = round(percentuale_righe * ns6);
 
-
 % indici di train e test
 indici_totali1 = 1:ns1;
 indici_righe_train1 = randperm(ns1, numero_righe1);
 indici_righe_test1 = setdiff(indici_totali1, indici_righe_train1);
 
+indici_righe_train1 = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
+indici_righe_test1 = [1 2 4 5 8 24]';
+
 indici_totali2 = 1:ns2;
 indici_righe_train2 = randperm(ns2, numero_righe2);
 indici_righe_test2 = setdiff(indici_totali2, indici_righe_train2);
+
+indici_righe_test2 = [1];
+indici_righe_train2 = [5 3 6 4 2]';
 
 indici_totali3 = 1:ns3;
 indici_righe_train3 = randperm(ns3, numero_righe3);
@@ -388,9 +351,6 @@ indici_totali6 = 1:ns6;
 indici_righe_train6 = randperm(ns6, numero_righe6);
 indici_righe_test6 = setdiff(indici_totali6, indici_righe_train6);
 
-
-
-
 % Estrazione dati train e test
 dati_train_NOX = dati_NOX(indici_righe_train1, :);
 dati_test_NOX = dati_NOX(indici_righe_test1, :);
@@ -407,8 +367,8 @@ dati_test_UMIDITA = dati_UMIDITA(indici_righe_test4, :);
 dati_train_VELVENTO = dati_VELVENTO(indici_righe_train5, :);
 dati_test_VELVENTO = dati_VELVENTO(indici_righe_test5, :);
 
-dati_train_PRECIPITAZIONI = dati_PRECIPITAZIONI(indici_righe_train6, :);
-dati_test_PRECIPITAZIONI = dati_PRECIPITAZIONI(indici_righe_test6, :);
+dati_train_PRESSIONE = dati_PRESSIONE(indici_righe_train6, :);
+dati_test_PRESSIONE = dati_PRESSIONE(indici_righe_test6, :);
 
 %load no2 obs
 ground.Y{1} = dati_train_NOX;
@@ -422,121 +382,141 @@ ground.Y_name{2} = 'pm25';
 n2 = size(ground.Y{2}, 1);
 
 %load temp obs
-ground.Y{3} = dati_train_TEMPERATURA;
+ground.Y{3} = dati_TEMPERATURA;
 ground.Y_name{3} = 'temp';
 n3 = size(ground.Y{3}, 1);
 
 %load umidity obs
-ground.Y{4} = dati_train_UMIDITA;
+ground.Y{4} = dati_UMIDITA;
 ground.Y_name{4} = 'umidity';
 n4 = size(ground.Y{4}, 1);
 
 %load wind velocity obs
-ground.Y{5} = dati_train_VELVENTO;
+ground.Y{5} = dati_VELVENTO;
 ground.Y_name{5} = 'wind_vel';
 n5 = size(ground.Y{5}, 1);
 
 %load precipitation obs
-ground.Y{6} = dati_train_PRECIPITAZIONI;
-ground.Y_name{6} = 'prec';
+ground.Y{6} = dati_PRESSIONE;
+ground.Y_name{6} = 'press';
 n6 = size(ground.Y{6}, 1);
 
-
+NOx_lat = NOX{1,1}{:,3};
+NOx_long = NOX{1,1}{:,4};
+NOx_alt = NOX{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n1, 1, T);
-for i=1:size(is_weekend,2)
+X_krig = zeros(size(dati_test_NOX, 1), 1, T);
+for i=1:T
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n1,1);
+        X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
     else
         X(:,1,i) = ones(n1,1);
-    end
-    X(:,2,i) = ones(n1,1);
+        X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
+    end 
+    X(:,2,i) = NOx_lat(indici_righe_train1);
+    X(:,3,i) = NOx_long(indici_righe_train1); 
+    X(:,4,i) = NOx_alt(indici_righe_train1); 
+    X_krig(:,2,i) = NOx_lat(indici_righe_test1);
+    X_krig(:,3,i) = NOx_long(indici_righe_test1);
+    X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1); 
+    X_krig(:,5,i) = NOx_alt(indici_righe_test1);
 end
-
-
-%load of sunday flags
 ground.X_beta{1} = X;
-ground.X_beta_name{1} = {'weekend', 'constant'};
+ground.X_beta_name{1} = {'weekend', 'lat', 'long','alt'};
+ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant','alt'};
+ground.X_beta_krig{1} = X_krig;
 
 
+PM25_lat = PM25{1,1}{:,3};
+PM25_long = PM25{1,1}{:,4};
+PM25_alt = PM25{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n2, 1, T);
-for i=1:size(is_weekend,2)
+X_krig = zeros(size(dati_test_PM25, 1), 1, T);
+for i=1:T
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n2,1);
+        X_krig(:,1,i) = zeros(size(dati_test_PM25, 1),1);      
     else
         X(:,1,i) = ones(n2,1);
+        X_krig(:,1,i) = ones(size(dati_test_PM25, 1),1);        
     end
-    X(:,2,i) = ones(n2,1);
+    X(:,2,i) = PM25_lat(indici_righe_train2);
+    X(:,3,i) = PM25_long(indici_righe_train2);
+    X(:,4,i) = PM25_alt(indici_righe_train2);
+    X_krig(:,2,i) = PM25_lat(indici_righe_test2);
+    X_krig(:,3,i) = PM25_long(indici_righe_test2); 
+    X_krig(:,4,i) = ones(size(dati_test_PM25, 1),1); 
+    X_krig(:,5,i) = PM25_alt(indici_righe_test2); 
 end
-
-
 ground.X_beta{2} = X;
-ground.X_beta_name{2} = {'weekend', 'constant'};
+ground.X_beta_name{2} = {'weekend', 'lat', 'long','alt'};
+ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant','alt'};
+ground.X_beta_krig{2} = X_krig;
 
+
+TEMPERATURA_lat = TEMPERATURA{1,1}{:,3};
+TEMPERATURA_long = TEMPERATURA{1,1}{:,4};
+TEMPERATURA_alt = TEMPERATURA{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n3, 1, T);
-for i=1:size(is_weekend,2)
-    if is_weekend(i) == 0
-        %creiamo una matrice n_stazioni x 1
-        X(:,1,i) = zeros(n3,1);
-    else
-        X(:,1,i) = ones(n3,1);
-    end
-    X(:,2,i) = ones(n3,1);
+for i=1:T  
+    X(:,1,i) = TEMPERATURA_lat;
+    X(:,2,i) = TEMPERATURA_long;
+    X(:,3,i) = TEMPERATURA_alt;
 end
-
-
 ground.X_beta{3} = X;
-ground.X_beta_name{3} = {'weekend', 'constant'};
+ground.X_beta_name{3} = {'lat', 'long','alt'};
+ground.X_beta_krig{3} = X;
 
+UMIDITA_lat = UMIDITA{1,1}{:,3};
+UMIDITA_long = UMIDITA{1,1}{:,4};
+UMIDITA_alt = UMIDITA{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n4, 1, T);
-for i=1:size(is_weekend,2)
-    if is_weekend(i) == 0
-        %creiamo una matrice n_stazioni x 1
-        X(:,1,i) = zeros(n4,1);
-    else
-        X(:,1,i) = ones(n4,1);
-    end
-    X(:,2,i) = ones(n4,1);
+for i=1:T  
+    X(:,1,i) = UMIDITA_lat;
+    X(:,2,i) = UMIDITA_long;
+    X(:,3,i) = UMIDITA_alt;
 end
-
-
 ground.X_beta{4} = X;
-ground.X_beta_name{4} = {'weekend', 'constant'};
+ground.X_beta_name{4} = {'lat', 'long','alt'};
+ground.X_beta_krig{4} = X;
 
+
+VEL_VENTO_lat = VEL_VENTO{1,1}{:,3};
+VEL_VENTO_long = VEL_VENTO{1,1}{:,4};
+VEL_VENTO_alt = VEL_VENTO{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n5, 1, T);
-for i=1:size(is_weekend,2)
-    if is_weekend(i) == 0
-        %creiamo una matrice n_stazioni x 1
-        X(:,1,i) = zeros(n5,1);
-    else
-        X(:,1,i) = ones(n5,1);
-    end
-    X(:,2,i) = ones(n5,1);
+for i=1:T
+    X(:,1,i) = VEL_VENTO_lat;
+    X(:,2,i) = VEL_VENTO_long;
+    X(:,3,i) = VEL_VENTO_alt;
 end
-
 ground.X_beta{5} = X;
-ground.X_beta_name{5} = {'weekend', 'constant'};
+ground.X_beta_name{5} = {'lat', 'long','alt'};
+ground.X_beta_krig{5} = X;
 
+
+PRESSIONE_lat = PRESSIONE{1,1}{:,3};
+PRESSIONE_long = PRESSIONE{1,1}{:,4};
+PRESSIONE_alt = PRESSIONE{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n6, 1, T);
-for i=1:size(is_weekend,2)
-    if is_weekend(i) == 0
-        %creiamo una matrice n_stazioni x 1
-        X(:,1,i) = zeros(n6,1);
-    else
-        X(:,1,i) = ones(n6,1);
-    end
-    X(:,2,i) = ones(n6,1);
+for i=1:T
+    X(:,1,i) = PRESSIONE_lat;
+    X(:,2,i) = PRESSIONE_long;
+    X(:,3,i) = PRESSIONE_alt;
 end
-
 ground.X_beta{6} = X;
-ground.X_beta_name{6} = {'weekend', 'constant'};
+ground.X_beta_name{6} = {'lat', 'long','alt'};
+ground.X_beta_krig{6} = X;
+
 
 %X_z
 ground.X_z{1} = ones(n1, 1);
@@ -566,35 +546,30 @@ obj_stem_varset_p = stem_varset(ground.Y, ground.Y_name, [], [], ...
 NOx_lat = NOX{1,1}{:,3};
 NOx_long = NOX{1,1}{:,4};
 
-%traffic_lat = str2_noxdouble(totale(:,2));
-%traffic_long = str2_noxdouble(totale(:,3));
-
 PM25_lat = PM25{1,1}{:,3};
 PM25_long = PM25{1,1}{:,4};
 
-BEN_lat = BEN{1,1}{:,3};
-BEN_long = BEN{1,1}{:,4};
+UMIDITA_lat = UMIDITA{1,1}{:,3};
+UMIDITA_long = UMIDITA{1,1}{:,4};
 
-UMIDITA_lat = UMIDITA{1,1}{:,2};
-UMIDITA_long = UMIDITA{1,1}{:,3};
+PRESSIONE_lat = PRESSIONE{1,1}{:,3};
+PRESSIONE_long = PRESSIONE{1,1}{:,4};
 
-PRECIPITAZIONI_lat = PRECIPITAZIONI{1,1}{:,2};
-PRECIPITAZIONI_long = PRECIPITAZIONI{1,1}{:,3};
-
-VEL_VENTO_lat = VEL_VENTO{1,1}{:,2};
-VEL_VENTO_long = VEL_VENTO{1,1}{:,3};
+VEL_VENTO_lat = VEL_VENTO{1,1}{:,3};
+VEL_VENTO_long = VEL_VENTO{1,1}{:,4};
                             
-TEMPERATURA_lat = TEMPERATURA{1,1}{:,2};
-TEMPERATURA_long = TEMPERATURA{1,1}{:,3};
+TEMPERATURA_lat = TEMPERATURA{1,1}{:,3};
+TEMPERATURA_long = TEMPERATURA{1,1}{:,4};
 
 obj_stem_gridlist_p = stem_gridlist();
 
 ground.coordinates{1} = [NOx_lat(indici_righe_train1), NOx_long(indici_righe_train1)];
 ground.coordinates{2} = [PM25_lat(indici_righe_train2), PM25_long(indici_righe_train2)];
-ground.coordinates{3} = [TEMPERATURA_lat(indici_righe_train3), TEMPERATURA_long(indici_righe_train3)];
-ground.coordinates{4} = [UMIDITA_lat(indici_righe_train4), UMIDITA_long(indici_righe_train4)];
-ground.coordinates{5} = [VEL_VENTO_lat(indici_righe_train5), VEL_VENTO_long(indici_righe_train5)];
-ground.coordinates{6} = [PRECIPITAZIONI_lat(indici_righe_train6), PRECIPITAZIONI_long(indici_righe_train6)];
+ground.coordinates{3} = [TEMPERATURA_lat, TEMPERATURA_long];
+ground.coordinates{4} = [UMIDITA_lat, UMIDITA_long];
+ground.coordinates{5} = [VEL_VENTO_lat, VEL_VENTO_long];
+ground.coordinates{6} = [PRESSIONE_lat, PRESSIONE_long];
+
 
 obj_stem_grid1 = stem_grid(ground.coordinates{1}, 'deg', 'sparse', 'point');
 obj_stem_grid2 = stem_grid(ground.coordinates{2}, 'deg', 'sparse', 'point');
@@ -602,6 +577,7 @@ obj_stem_grid3 = stem_grid(ground.coordinates{3}, 'deg', 'sparse', 'point');
 obj_stem_grid4 = stem_grid(ground.coordinates{4}, 'deg', 'sparse', 'point');
 obj_stem_grid5 = stem_grid(ground.coordinates{5}, 'deg', 'sparse', 'point');
 obj_stem_grid6 = stem_grid(ground.coordinates{6}, 'deg', 'sparse', 'point');
+
 
 obj_stem_gridlist_p.add(obj_stem_grid1);
 obj_stem_gridlist_p.add(obj_stem_grid2);
@@ -628,6 +604,7 @@ S_val4=1:5:n4;
 S_val5=1:5:n5;
 S_val6=1:5:n6;
 
+
 obj_stem_validation = [];
 
 obj_stem_modeltype = stem_modeltype('HDGM');
@@ -640,7 +617,7 @@ obj_stem_par_constraints.time_diagonal=0;
 obj_stem_par = stem_par(obj_stem_data, 'exponential',obj_stem_par_constraints);
 %stem_model object creation
 obj_stem_model = stem_model(obj_stem_data, obj_stem_par);
-clear ground
+
 
 %Data transform
 obj_stem_model.stem_data.log_transform;
@@ -649,13 +626,10 @@ obj_stem_model.stem_data.standardize;
 %Starting values
 obj_stem_par.beta = obj_stem_model.get_beta0();
 obj_stem_par.theta_z = 0.1;
-obj_stem_par.v_z = eye(6);
+obj_stem_par.v_z = rand(6,6)*0.1 + eye(6);
 obj_stem_par.sigma_eta = diag([0.02 0.02 0.1 0.1 0.1 0.1]);
 obj_stem_par.G = diag(0.9*ones(6,1));
-obj_stem_par.sigma_eps = diag([0.02 0.02 0.02 0.1 0.1 0.1]); 
-
-
-
+obj_stem_par.sigma_eps = diag([0.01 0.3 0.02 0.1 0.1 0.2]); 
 
 obj_stem_model.set_initial_values(obj_stem_par);
 
@@ -672,32 +646,21 @@ obj_stem_model.set_logL;
 
 obj_stem_model.print; 
 
+d = sqrt(diag(obj_stem_model.stem_par.v_z).*eye(6))
+R = inv(d)*obj_stem_model.stem_par.v_z*inv(d)
+
+
+
 
 %% Kriging on validation stations
-obj_stem_model_pm25 = obj_stem_model;
-obj_stem_model_nox = obj_stem_model;
-
 
 % KRINGING NOX
-krig_coordinates = [NOx_lat(indici_righe_test1, :), NOx_long(indici_righe_test1, :)];
+krig_coordinates = [NOx_lat(indici_righe_test1), NOx_long(indici_righe_test1)];
 
-obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point',[], 'square', 0.001, 0.001);
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
 
-
-X_krig = zeros(size(krig_coordinates, 1), 1, T);
-for i=1:size(is_weekend,2)
-    if is_weekend(i) == 0
-        %creiamo una matrice n_stazioni x 1
-        X_krig(:,1,i) = zeros(size(krig_coordinates, 1),1);
-    else
-        X_krig(:,1,i) = ones(size(krig_coordinates, 1),1);
-    end
-    X_krig(:,2,i) = ones(size(krig_coordinates, 1),1);
-end
-
-
-obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, X_krig, {'weekend', 'constant'});
-obj_stem_krig = stem_krig(obj_stem_model_nox,obj_stem_krig_data);
+obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1});
+obj_stem_krig = stem_krig(obj_stem_model, obj_stem_krig_data);
 
 obj_stem_krig_options = stem_krig_options();
 obj_stem_krig_options.block_size = 1000;
@@ -705,50 +668,30 @@ obj_stem_krig_options.block_size = 1000;
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 
 %calcolo dell'RMSE e R2
-y_hat_nox = obj_stem_krig_result{1}.y_hat;
+y_hat_nox = obj_stem_krig_result{1,1}.y_hat;
 
 % prendiamo le y originali
 rmse_nox = [];
 r2_nox = [];
 
-for i = 1:size(y_hat_nox(:,1), 1)
-    mse = 0;
-    sp = 0;
-    for j = 1:size(y_hat_nox(1,:), 2)
-        if not(isnan(dati_test_NOX(i,j)))
-            mse = mse + (dati_test_NOX(i,j) - y_hat_nox(i,j))^2;
-            sp = sp + (dati_test_NOX(i,j) - nanmean(dati_test_NOX(i,:)))^2;
-        end
-    end
-    rmse_nox = [rmse_nox sqrt(mse / size(y_hat_nox(1,:), 2))];
-    r2_nox = [r2_nox 1-(mse / sp)];
-end
-rmse_nox
-r2_nox
-rmse_tot_nox = mean(rmse_nox);
-mean(r2_nox)
+rmse_nox = nanstd(dati_test_NOX - y_hat_nox,1,2)
 
+r2_nox = 1 - nanvar(dati_test_NOX - y_hat_nox,1,2)./nanvar(dati_test_NOX,1,2);
+rmse_nox_mean = mean(rmse_nox)
+r2_nox_mean = mean(r2_nox)
+
+
+
+%%
 
 % KRINGING PM25
-krig_coordinates = [PM25_lat(indici_righe_test2, :), PM25_long(indici_righe_test2, :)];
+krig_coordinates = [PM25_lat(indici_righe_test2), PM25_long(indici_righe_test2)];
 
-obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point',[], 'square', 0.001, 0.001);
-
-
-X_krig = zeros(size(krig_coordinates, 1), 1, T);
-for i=1:size(is_weekend,2)
-    if is_weekend(i) == 0
-        %creiamo una matrice n_stazioni x 1
-        X_krig(:,1,i) = zeros(size(krig_coordinates, 1),1);
-    else
-        X_krig(:,1,i) = ones(size(krig_coordinates, 1),1);
-    end
-    X_krig(:,2,i) = ones(size(krig_coordinates, 1),1);
-end
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
 
 
-obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, X_krig, {'weekend', 'constant'});
-obj_stem_krig = stem_krig(obj_stem_model_pm25,obj_stem_krig_data);
+obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,2}, ground.X_beta_name_krig{1,2});
+obj_stem_krig = stem_krig(obj_stem_model, obj_stem_krig_data);
 
 obj_stem_krig_options = stem_krig_options();
 obj_stem_krig_options.block_size = 1000;
@@ -756,34 +699,11 @@ obj_stem_krig_options.block_size = 1000;
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 
 %calcolo dell'RMSE e R2
-y_hat_pm25 = obj_stem_krig_result{1}.y_hat;
+y_hat_pm25 = obj_stem_krig_result{2,1}.y_hat;
 
 % prendiamo le y originali
-rmse_pm25 = [];
-r2_pm25 = [];
+rmse_pm25 = nanstd(dati_test_PM25 - y_hat_pm25,1,2)
+r2_pm25 = 1 - nanvar(dati_test_PM25 - y_hat_pm25,1,2)./nanvar(dati_test_PM25,1,2);
 
-for i = 1:size(y_hat_pm25(:,1), 1)
-    mse = 0;
-    sp = 0;
-    for j = 1:size(y_hat_pm25(1,:), 2)
-        if not(isnan(dati_test_PM25(i,j)))
-            mse = mse + (dati_test_PM25(i,j) - y_hat_pm25(i,j))^2;
-            sp = sp + (dati_test_PM25(i,j) - nanmean(dati_test_PM25(i,:)))^2;
-        end
-    end
-    rmse_pm25 = [rmse_pm25 sqrt(mse / size(y_hat_pm25(1,:), 2))];
-    r2_pm25 = [r2_pm25 1-(mse / sp)];
-end
-rmse_pm25
-r2_pm25
-rmse_tot_pm25 = mean(rmse_pm25);
-mean(r2_pm25)
-
-
-
-
-
-
-
-
-
+rmse_pm25_mean = mean(rmse_pm25);
+r2_pm25_mean = mean(r2_pm25)

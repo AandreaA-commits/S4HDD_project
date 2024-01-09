@@ -81,6 +81,8 @@ for i = 1:size(PM25, 2)
     dati_PM25 = [dati_PM25 colonne_numeriche];
 end
 
+dati_PM25 = dati_PM25(:,14:24:end)   
+
 % 1 gennaio 2019 era martedì
 is_weekend = zeros(1,365*24);
 flag_weekend = 48;
@@ -114,6 +116,9 @@ indici_totali = 1:n;
 indici_righe_train = randperm(n, numero_righe);
 indici_righe_test = setdiff(indici_totali, indici_righe_train);
 
+indici_righe_test = [1];
+indici_righe_train = [5 3 6 4 2]';
+
 % Estrazione dati train e test
 dati_train_PM25 = dati_PM25(indici_righe_train, :);
 dati_test_PM25 = dati_PM25(indici_righe_test, :);
@@ -133,7 +138,7 @@ PM25_alt = PM25{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n1, 1, T);
 X_krig = zeros(size(dati_test_PM25, 1), 1, T);
-for i=1:size(is_weekend,2)
+for i=1:T
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n1,1);
@@ -273,18 +278,4 @@ rmse
 r2 = 1 - nanvar(dati_test_PM25 - y_hat,1,2)./nanvar(dati_test_PM25,1,2);
 rmse_tot = mean(rmse);
 mean(r2)
-
-
-%figure;
-%plot(res(1,:));
-%adftest(res(1,:)) % se 1 è stazionario
-
-% Calcolo e plot della variabile latente z(s,t)
-
-% Creazione processo gaussiano n(s,t)
-%v = mvnrnd(zeros(1,size(dist,1)), obj_stem_model.stem_EM_result.stem_par.sigma_eta,1);
-
-% in sospeso
-
-
 

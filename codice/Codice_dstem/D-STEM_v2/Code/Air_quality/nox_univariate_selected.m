@@ -101,6 +101,10 @@ indici_totali = 1:n;
 indici_righe_train = randperm(n, numero_righe);
 indici_righe_test = setdiff(indici_totali, indici_righe_train);
 
+%indice manuale dati test  e train
+indici_righe_train = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
+indici_righe_test = [1 2 4 5 8 24]';
+
 % Estrazione dati train e test
 dati_train_NOX = dati_NOX(indici_righe_train, :);
 dati_test_NOX = dati_NOX(indici_righe_test, :);
@@ -256,17 +260,6 @@ r2 = 1 - nanvar(dati_test_NOX - y_hat,1,2)./nanvar(dati_test_NOX,1,2);
 rmse_tot = mean(rmse)
 mean(r2)
 
-
-%figure;
-%plot(res(1,:));
-%adftest(res(1,:)) % se 1 è stazionario
-
-% Calcolo e plot della variabile latente z(s,t)
-
-% Creazione processo gaussiano n(s,t)
-%v = mvnrnd(zeros(1,size(dist,1)), obj_stem_model.stem_EM_result.stem_par.sigma_eta,1);
-
-% in sospeso
 
 %%
 % KRIGING GRID COMPLETA

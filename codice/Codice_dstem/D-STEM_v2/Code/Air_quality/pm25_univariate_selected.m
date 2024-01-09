@@ -81,6 +81,8 @@ for i = 1:size(PM25, 2)
     dati_PM25 = [dati_PM25 colonne_numeriche];
 end
 
+dati_PM25 = dati_PM25(:,14:24:end)  
+
 
 %% script per divisione dati di training e dati di testing (per stazione)
 %numero delle stazioni totali
@@ -96,6 +98,9 @@ numero_righe = round(percentuale_righe * n);
 indici_totali = 1:n;
 indici_righe_train = randperm(n, numero_righe);
 indici_righe_test = setdiff(indici_totali, indici_righe_train);
+
+indici_righe_test = [1];
+indici_righe_train = [5 3 6 4 2]';
 
 % Estrazione dati train e test
 dati_train_PM25 = dati_PM25(indici_righe_train, :);
@@ -120,14 +125,15 @@ for i=1:T
     X(:,1,i) = PM25_lat(indici_righe_train);
     X(:,2,i) = PM25_long(indici_righe_train);  
     X(:,3,i) = PM25_alt(indici_righe_train);  
-    X_krig(:,1,i) = PM25_lat(indici_righe_test);
-    X_krig(:,2,i) = PM25_long(indici_righe_test);
-    X_krig(:,3,i) = ones(size(dati_test_PM25, 1),1);  
-    X_krig(:,4,i) = PM25_alt(indici_righe_test); 
+    %X_krig(:,1,i) = PM25_lat(indici_righe_test);
+    X_krig(:,1,i) = ones(size(dati_test_PM25, 1),1);  
+    %X_krig(:,2,i) = PM25_long(indici_righe_test);
+    %X_krig(:,3,i) = ones(size(dati_test_PM25, 1),1);  
+    %X_krig(:,4,i) = PM25_alt(indici_righe_test); 
 end
 ground.X_beta{1} = X;
 ground.X_beta_name{1} = {'lat', 'long','alt'};
-ground.X_beta_name_krig{1} = {'lat', 'long', 'constant','alt'};
+ground.X_beta_name_krig{1} = {'constant'};
 ground.X_beta_krig{1} = X_krig;
 
 
@@ -137,7 +143,7 @@ ground.X_z_name{1} = {'constant'};
 
 
 obj_stem_varset_p = stem_varset(ground.Y, ground.Y_name, [], [], ...
-                                ground.X_beta, ground.X_beta_name, ... 
+                                [], [], ... 
                                 ground.X_z, ground.X_z_name);
 
 PM25_lat = PM25{1,1}{:,3};
@@ -246,16 +252,47 @@ rmse_tot = mean(rmse);
 mean(r2)
 
 
-%figure;
-%plot(res(1,:));
-%adftest(res(1,:)) % se 1 è stazionario
+%%
+% KRIGING GRID COMPLETA
+krig_coordinates_lat = 40.30:0.00235:40.7;
+krig_coordinates_long = -3.9:0.00235:-3.5;
+krig_coordinates_lat = krig_coordinates_lat(:,1:3:end) % 57 valori
+krig_coordinates_long = krig_coordinates_long(:,1:3:end)
 
-% Calcolo e plot della variabile latente z(s,t)
+[LON,LAT] = meshgrid(krig_coordinates_long,krig_coordinates_lat');
+krig_coordinates = [LAT(:) LON(:)];
 
-% Creazione processo gaussiano n(s,t)
-%v = mvnrnd(zeros(1,size(dist,1)), obj_stem_model.stem_EM_result.stem_par.sigma_eta,1);
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'regular','pixel',size(LAT),'square',0.75,0.75);
+a = load("..\..\..\..\krig_coordinates_csv.csv");
 
-% in sospeso
+X_krig = zeros(size(LAT, 1)*size(LON,1), 1, T);
+for i=1:T    
+    X_krig(:,1,i) = a(1:9:end,1);
+    X_krig(:,2,i) = a(1:9:end,2);
+    X_krig(:,3,i) = ones(size(LAT, 1)*size(LON,1), 1);  
+    X_krig(:,4,i) = a(1:9:end,3);  
+end
+ground.X_beta_name_krig{1} = {'lat', 'long', 'constant', 'alt'};
+ground.X_beta_krig{1} = X_krig;
+
+clear X_krig
+
+obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
+obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
+
+obj_stem_krig_options = stem_krig_options();
+obj_stem_krig_options.block_size = 1000;
+clear ground
+
+obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
+figure;
+contourfm(krig_coordinates_lat, krig_coordinates_long, obj_stem_krig_result{1}.y_hat(:,:,1))  
+
+
+yhat_reshape = reshape(obj_stem_krig_result{1}.y_hat(:,:,1),57*57,1)
+plot(yhat_reshape)
+s = geoscatter(krig_coordinates(:,1), krig_coordinates(:,2), yhat_reshape, yhat_reshape,'filled')
+
 
 
 

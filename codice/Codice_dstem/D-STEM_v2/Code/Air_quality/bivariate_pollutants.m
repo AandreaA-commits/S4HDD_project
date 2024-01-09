@@ -85,6 +85,9 @@ for i = 1:size(NOX, 2)
     dati_PM25 = [dati_PM25 colonne_numeriche];    
 end
 
+dati_PM25 = dati_PM25(:,14:24:end)  
+dati_NOX = dati_NOX(:,14:24:end)  
+
 
 % creazione vettore covariata is_weekend
 % 1 gennaio 2019 era martedì
@@ -163,7 +166,7 @@ NOx_alt = NOX{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n1, 1, T);
 X_krig = zeros(size(dati_test_NOX, 1), 1, T);
-for i=1:size(is_weekend,2)
+for i=1:T
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n1,1);
@@ -192,7 +195,7 @@ PM25_alt = PM25{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n2, 1, T);
 X_krig = zeros(size(dati_test_PM25, 1), 1, T);
-for i=1:size(is_weekend,2)
+for i=1:T
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n2,1);
@@ -300,6 +303,9 @@ obj_stem_model.set_logL;
 
 obj_stem_model.print; 
 
+d = sqrt(diag(obj_stem_model.stem_EM_result.stem_par.v_z).*eye(2))
+R = inv(d)*obj_stem_model.stem_EM_result.stem_par.v_z*inv(d)
+
 %% Kriging on validation stations
 
 % KRINGING NOX
@@ -334,7 +340,7 @@ r2_nox_mean = mean(r2_nox)
 % KRINGING PM25
 krig_coordinates = [PM25_lat(indici_righe_test2), PM25_long(indici_righe_test2)];
 
-obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point',[], 'square', 0.001, 0.001);
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
 
 obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,2}, ground.X_beta_name_krig{1,2});
 obj_stem_krig = stem_krig(obj_stem_model, obj_stem_krig_data);
@@ -345,7 +351,7 @@ obj_stem_krig_options.block_size = 1000;
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 
 %calcolo dell'RMSE e R2
-y_hat_pm25 = obj_stem_krig_result{1}.y_hat;
+y_hat_pm25 = obj_stem_krig_result{2,1}.y_hat;
 
 % prendiamo le y originali
 rmse_pm25 = nanstd(dati_test_PM25 - y_hat_pm25,1,2)

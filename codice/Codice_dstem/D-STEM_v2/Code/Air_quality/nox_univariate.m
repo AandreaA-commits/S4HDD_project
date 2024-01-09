@@ -83,6 +83,8 @@ for i = 1:size(NOX, 2)
     dati_NOX = [dati_NOX colonne_numeriche];
 end
 
+dati_NOX = dati_NOX(:,14:24:end)    
+
 % 1 gennaio 2019 era martedì
 is_weekend = zeros(1,365*24);
 flag_weekend = 48;
@@ -144,7 +146,7 @@ NOx_alt = NOX{1,1}{:,2};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n1, 1, T);
 X_krig = zeros(size(dati_test_NOX, 1), 1, T);
-for i=1:size(is_weekend,2)
+for i=1:T
     if is_weekend(i) == 0
         %creiamo una matrice n_stazioni x 1
         X(:,1,i) = zeros(n1,1);
@@ -273,8 +275,6 @@ obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 y_hat = obj_stem_krig_result{1}.y_hat;
 
 
-
-
 % prendiamo le y originali
 
 r2 = [];
@@ -290,18 +290,5 @@ rmse
 r2 = 1 - nanvar(dati_test_NOX - y_hat,1,2)./nanvar(dati_test_NOX,1,2);
 rmse_tot = mean(rmse)
 mean(r2)
-
-
-%figure;
-%plot(res(1,:));
-%adftest(res(1,:)) % se 1 è stazionario
-
-% Calcolo e plot della variabile latente z(s,t)
-
-% Creazione processo gaussiano n(s,t)
-%v = mvnrnd(zeros(1,size(dist,1)), obj_stem_model.stem_EM_result.stem_par.sigma_eta,1);
-
-% in sospeso
-
 
 
