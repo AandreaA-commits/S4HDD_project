@@ -191,6 +191,7 @@ classdef stem_grid
                         if sum(c)>0
                             obj.duplicated_sites=[obj.duplicated_sites;find(c,1)+i];
                             disp(['WARNING: coordinate ',num2str(i),' equal to coordinate ',num2str(find(c,1)+i)]);
+                            disp(['prima coordinata', num2str(coordinate(i,:)), 'seconda coordinata', num2str(coordinate(find(c,1)+i,:))]);
                         end
                     end
                 else

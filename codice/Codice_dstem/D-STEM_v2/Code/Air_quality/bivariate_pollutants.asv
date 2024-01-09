@@ -122,18 +122,11 @@ indici_totali1 = 1:ns1;
 indici_righe_train1 = randperm(ns1, numero_righe1);
 indici_righe_test1 = setdiff(indici_totali1, indici_righe_train1);
 
-indici_righe_train1 = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
-indici_righe_test1 = [1 2 4 5 8 24]';
-
 indici_totali2 = 1:ns2;
 indici_righe_train2 = randperm(ns2, numero_righe2);
 indici_righe_test2 = setdiff(indici_totali2, indici_righe_train2);
 
-indici_righe_test2 = [1];
-indici_righe_train2 = [5 3 6 4 2]';
-
-
-
+% Estrazione coordinate test e train
 NOx_lat_train = NOX{1,1}{:,3}(indici_righe_train1, :);
 NOx_long_test = NOX{1,1}{:,4}(indici_righe_test1, :);
 PM25_lat_train = PM25{1,1}{:,3}(indici_righe_train2, :);
@@ -289,7 +282,7 @@ obj_stem_model.set_initial_values(obj_stem_par);
 
 %Model estimation
 exit_toll = 0.001;
-max_iterations = 200;
+max_iterations = 1;
 obj_stem_EM_options = stem_EM_options();
 obj_stem_EM_options.max_iterations = max_iterations;
 obj_stem_EM_options.exit_tol_par = exit_toll;
