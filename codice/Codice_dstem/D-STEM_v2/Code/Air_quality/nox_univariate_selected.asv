@@ -278,11 +278,11 @@ for l = 1:size(dati_NOX, 1)
     
     beta_cv = [beta_cv beta];
     theta_z_cv = [theta_z_cv theta_z];
-    v_z_cv{1,l} = v_z;
+    v_z_cv{1,i} = v_z;
     sigma_eta_cv = [sigma_eta_cv sigma_eta];
-    G_cv{1,l} = G;
+    G_cv{1,i} = G;
     sigma_eps_cv = [sigma_eps_cv sigma_eps];
-    diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
+    diag_varcov_cv{1,i} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
     log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.stem_par.logL];
     disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
 
@@ -291,8 +291,7 @@ end
 mean(R2_cv)
 mean(rmse_cv)
 
-obj_stem_model.print
-
+O
 
 %% Prova digrafico
 madrid = shaperead('madrid-districtsgeojson.shp');
