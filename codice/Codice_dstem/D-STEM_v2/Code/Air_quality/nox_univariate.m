@@ -103,6 +103,10 @@ for i = 4*24+1:size(is_weekend,2) % itero tutte le ore dell'anno
     end    
 end
 
+
+%% INIZIO CROSSVALIDAZIONE
+
+
 %% script per divisione dati di training e dati di testing (per stazione)
 %numero delle stazioni totali
 n = size(dati_NOX, 1); 
