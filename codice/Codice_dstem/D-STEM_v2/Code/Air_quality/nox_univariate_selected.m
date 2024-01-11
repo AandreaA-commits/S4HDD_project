@@ -283,7 +283,7 @@ for l = 1:size(dati_NOX, 1)
     G_cv{1,l} = G;
     sigma_eps_cv = [sigma_eps_cv sigma_eps];
     diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
-    log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.stem_par.logL];
+    log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
     disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
 
 end
@@ -309,7 +309,7 @@ end
 
 %utilizzare geoplot per fare delle linee sulla mappa
 
-
+%{
 %%
 % KRIGING GRID COMPLETA
 krig_coordinates_lat = 40.30:0.00235:40.7;
@@ -320,19 +320,24 @@ krig_coordinates_long = krig_coordinates_long(:,1:3:end);
 [LON,LAT] = meshgrid(krig_coordinates_long,krig_coordinates_lat');
 krig_coordinates = [LAT(:) LON(:)];
 
-obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'regular','pixel',size(LAT),'square',0.75,0.75);
+
+%}
 a = load("..\..\..\..\krig_coordinates_csv.csv");
 
-X_krig = zeros(size(LAT, 1)*size(LON,1), 1, T);
+X_krig = zeros(57*57, 1, T);
 for i=1:T    
     X_krig(:,1,i) = a(1:9:end,1);
     X_krig(:,2,i) = a(1:9:end,2);
-    X_krig(:,3,i) = ones(size(LAT, 1)*size(LON,1), 1);  
+    X_krig(:,3,i) = ones(57*57, 1);  
     X_krig(:,4,i) = a(1:9:end,3);  
 end
 ground.X_beta_name_krig{1} = {'lat', 'long', 'constant', 'alt'};
 ground.X_beta_krig{1} = X_krig;
 
+krig_coordinates = [a(1:9:end,1), a(1:9:end,2)];
+    
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
+    
 clear X_krig
 
 obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
@@ -343,10 +348,11 @@ obj_stem_krig_options.block_size = 1000;
 clear ground
 
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
+
 figure;
-contourfm(krig_coordinates_lat, krig_coordinates_long, obj_stem_krig_result{1}.y_hat(:,:,1))  
+contourf(reshape(a(1:9:end,2), 57,57), reshape(a(1:9:end,1), 57,57), reshape(a(1:9:end,3), 57,57), obj_stem_krig_result{1,1}.y_hat(:,:,50));
 
 
-yhat_reshape = reshape(obj_stem_krig_result{1}.y_hat(:,:,1),57*57,1)
-plot(yhat_reshape)
-s = geoscatter(krig_coordinates(:,1), krig_coordinates(:,2), yhat_reshape, yhat_reshape,'filled')
+
+
+

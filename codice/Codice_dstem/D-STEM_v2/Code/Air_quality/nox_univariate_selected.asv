@@ -278,11 +278,11 @@ for l = 1:size(dati_NOX, 1)
     
     beta_cv = [beta_cv beta];
     theta_z_cv = [theta_z_cv theta_z];
-    v_z_cv{1,i} = v_z;
+    v_z_cv{1,l} = v_z;
     sigma_eta_cv = [sigma_eta_cv sigma_eta];
-    G_cv{1,i} = G;
+    G_cv{1,l} = G;
     sigma_eps_cv = [sigma_eps_cv sigma_eps];
-    diag_varcov_cv{1,i} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
+    diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
     log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.stem_par.logL];
     disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
 
@@ -291,7 +291,8 @@ end
 mean(R2_cv)
 mean(rmse_cv)
 
-O
+obj_stem_model.print
+
 
 %% Prova digrafico
 madrid = shaperead('madrid-districtsgeojson.shp');
@@ -308,7 +309,7 @@ end
 
 %utilizzare geoplot per fare delle linee sulla mappa
 
-
+%{
 %%
 % KRIGING GRID COMPLETA
 krig_coordinates_lat = 40.30:0.00235:40.7;
@@ -321,6 +322,8 @@ krig_coordinates = [LAT(:) LON(:)];
 
 obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'regular','pixel',size(LAT),'square',0.75,0.75);
 a = load("..\..\..\..\krig_coordinates_csv.csv");
+%}
+
 
 X_krig = zeros(size(LAT, 1)*size(LON,1), 1, T);
 for i=1:T    
@@ -342,10 +345,11 @@ obj_stem_krig_options.block_size = 1000;
 clear ground
 
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
+
 figure;
-contourfm(krig_coordinates_lat, krig_coordinates_long, obj_stem_krig_result{1}.y_hat(:,:,1))  
+contourf(reshape(a(1:9:end,2), 57,57), reshape(a(1:9:end,1), 57,57), reshape(a(1:9:end,3), 57,57), obj_stem_krig_result);
 
 
-yhat_reshape = reshape(obj_stem_krig_result{1}.y_hat(:,:,1),57*57,1)
-plot(yhat_reshape)
-s = geoscatter(krig_coordinates(:,1), krig_coordinates(:,2), yhat_reshape, yhat_reshape,'filled')
+
+
+
