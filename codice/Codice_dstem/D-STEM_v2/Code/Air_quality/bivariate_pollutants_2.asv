@@ -455,7 +455,7 @@ madrid = shaperead('madrid-districtsgeojson.shp');
 figure
 colorbar
 hold on
-h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{1,1}.y_hat(:,:,9),'DisplayType','texturemap')
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{2,1}.y_hat(:,:,9),'DisplayType','texturemap')
 set(h,'FaceColor','flat')
 geoshow(madrid,'FaceColor','none')
 geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,2),...
@@ -467,7 +467,7 @@ hold on
 h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{2,1}.diag_Var_y_hat(:,:,9),'DisplayType','texturemap')
 set(h,'FaceColor','flat')
 geoshow(madrid,'FaceColor','none')
-geoshow(obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,2),...
+geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,2),...
                     'DisplayType','multipoint','Marker','*','MarkerEdgeColor','r');
 
 geoshow(obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,2),...

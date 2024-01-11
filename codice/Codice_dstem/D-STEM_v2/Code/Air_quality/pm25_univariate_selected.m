@@ -281,22 +281,35 @@ clear ground
 
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 
-figure;
-contourf(reshape(a(1:end,2), 56,56), reshape(a(1:end,1), 56,56), reshape(obj_stem_krig_result{1,1}.y_hat(:,16),56,56));
-colorbar;
-caxis([5 40])
 
 %%%%%%%%%% CODICE FUNZIONANTE INIZIO %%%%%%%%%%%%
+%% ATTENZIOEN USARE DATI GIORNO 9 SONO MOLTO BELLI
 
 figure
+colorbar
 hold on
-h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{1,1}.y_hat(:,:,1),'DisplayType','texturemap')
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{1,1}.y_hat(:,:,17),'DisplayType','texturemap')
 set(h,'FaceColor','flat')
-geoshow(madrid,'FaceColor','none', 'linewidth', 2)
+geoshow(madrid,'FaceColor','none')
+geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,2),...
+                    'DisplayType','multipoint','Marker','*','MarkerEdgeColor','b');
+
+figure
+colorbar
+hold on
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{1,1}.diag_Var_y_hat(:,:,17),'DisplayType','texturemap')
+set(h,'FaceColor','flat')
+geoshow(madrid,'FaceColor','none')
 geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,2),...
                     'DisplayType','multipoint','Marker','*','MarkerEdgeColor','b');
 
 %%%%%%%%%% CODICE FUNZIONANTE FINE %%%%%%%%%%%%
+
+
+figure;
+contourf(reshape(a(1:end,2), 56,56), reshape(a(1:end,1), 56,56), reshape(obj_stem_krig_result{1,1}.y_hat(:,16),56,56));
+colorbar;
+caxis([5 40])
 
 figure
 obj_stem_krig_result{1}.plot(200)
