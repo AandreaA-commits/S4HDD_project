@@ -152,18 +152,18 @@ log_likelihood_cv = [];
 %Setting parametri inziali
 beta = [];
 theta_z = 0.1;
-v_z = 0.2;
-sigma_eta = 1;
-G = 0.9;
-sigma_eps = 0.1; 
+v_z = 0.2*eye(2);
+sigma_eta = [1 1];
+G = 0.9*eye(2);
+sigma_eps = [0.1 0.1]; 
 
 totali_lat = [NOX{1,1}{:,3}; PM25{1,1}{:,3}];
 totali_long = [NOX{1,1}{:,4}; PM25{1,1}{:,4}];
 
 
-for l = size(totali_lat, 1):size(totali_lat, 1)%size(dati_NOX, 1)+1:size(totali_lat, 1)
+for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     indici_righe_test = l;
-    indici_righe_train = setdiff(indici_totali, indici_righe_test);
+    indici_righe_train = setdiff(indici_totali, indici_righe_test, 'stable');
 
     NOx_lat = NOX{1,1}{:,3};
     NOx_long = NOX{1,1}{:,4};
@@ -275,10 +275,8 @@ for l = size(totali_lat, 1):size(totali_lat, 1)%size(dati_NOX, 1)+1:size(totali_
     ground.coordinates{1} = [NOx_lat, NOx_long];
     ground.coordinates{2} = [PM25_lat_train, PM25_long_train];
     
-    
     obj_stem_grid1 = stem_grid(ground.coordinates{1}, 'deg', 'sparse', 'point');
     obj_stem_grid2 = stem_grid(ground.coordinates{2}, 'deg', 'sparse', 'point');
-    
     
     obj_stem_gridlist_p.add(obj_stem_grid1);
     obj_stem_gridlist_p.add(obj_stem_grid2);
@@ -330,7 +328,7 @@ for l = size(totali_lat, 1):size(totali_lat, 1)%size(dati_NOX, 1)+1:size(totali_
     obj_stem_model.set_varcov;
     obj_stem_model.set_logL;    
     
-    %obj_stem_model.print; 
+    obj_stem_model.print; 
     
     %d = sqrt(diag(obj_stem_model.stem_EM_result.stem_par.v_z).*eye(2));
     %R = inv(d)*obj_stem_model.stem_EM_result.stem_par.v_z*inv(d);
@@ -455,23 +453,26 @@ madrid = shaperead('madrid-districtsgeojson.shp');
 figure
 colorbar
 hold on
-h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{1,1}.y_hat(:,:,9),'DisplayType','texturemap')
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{2,1}.y_hat(:,:,9),'DisplayType','texturemap');
 set(h,'FaceColor','flat')
+colorbar;
+%caxis([0 50])
 geoshow(madrid,'FaceColor','none')
-geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,2),...
+geoshow(obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,2),...
                     'DisplayType','multipoint','Marker','*','MarkerEdgeColor','y');
+
 
 figure
 colorbar
 hold on
-h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{2,1}.diag_Var_y_hat(:,:,9),'DisplayType','texturemap')
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),sqrt(obj_stem_krig_result{2,1}.diag_Var_y_hat(:,:,9)),'DisplayType','texturemap')
 set(h,'FaceColor','flat')
+colorbar;
+%caxis([0 20])
 geoshow(madrid,'FaceColor','none')
 geoshow(obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,2),...
                     'DisplayType','multipoint','Marker','*','MarkerEdgeColor','r');
 
-geoshow(obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,2),...
-                    'DisplayType','multipoint','Marker','*','MarkerEdgeColor','b');
 
 %%%%%%%%%% CODICE FUNZIONANTE FINE %%%%%%%%%%%%
 

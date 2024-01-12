@@ -129,164 +129,163 @@ sigma_eta = 1;
 G = 0.9;
 sigma_eps = 0.1; 
 
+%inserire l'indice di test e train migliore da cv
+indici_righe_test = l;
+indici_righe_train = setdiff(indici_totali, indici_righe_test, 'stable');
 
-for l = 1:size(dati_NOX, 1)
-    indici_righe_test = l;
-    indici_righe_train = setdiff(indici_totali, indici_righe_test);
+% Estrazione dati train e test
+dati_train_NOX = dati_NOX(indici_righe_train, :);
+dati_test_NOX = dati_NOX(indici_righe_test, :);
 
-    % Estrazione dati train e test
-    dati_train_NOX = dati_NOX(indici_righe_train, :);
-    dati_test_NOX = dati_NOX(indici_righe_test, :);
 
-    
-    %load NOX obs
-    ground.Y{1} = dati_train_NOX;
-    ground.Y_name{1} = 'nox';
-    n1 = size(ground.Y{1}, 1);
-    T = size(ground.Y{1}, 2);
-    
-    % da ripetere anche per il test questa procedura
-    % matrice [stazioni x numero_covariate x giorni]
-    NOx_lat = NOX{1,1}{:,3};
-    NOx_long = NOX{1,1}{:,4};
-    NOx_alt = NOX{1,1}{:,2};
-    %matrice [stazioni x numero_covariate x giorni]
-    X = zeros(n1, 1, T);
-    X_krig = zeros(size(dati_test_NOX, 1), 1, T);
-    for i=1:T    
-        X(:,1,i) = NOx_lat(indici_righe_train);
-        X(:,2,i) = NOx_long(indici_righe_train);
-        X(:,3,i) = NOx_alt(indici_righe_train);
-        X_krig(:,1,i) = NOx_lat(indici_righe_test);
-        X_krig(:,2,i) = NOx_long(indici_righe_test);
-        X_krig(:,3,i) = ones(size(dati_test_NOX, 1),1);  
-        X_krig(:,4,i) = NOx_alt(indici_righe_test);  
-    end
-    ground.X_beta{1} = X;
-    ground.X_beta_name{1} = {'lat', 'long', 'alt'};
-    ground.X_beta_name_krig{1} = {'lat', 'long', 'constant', 'alt'};
-    ground.X_beta_krig{1} = X_krig;
-    
-    
-    %X_z
-    ground.X_z{1} = ones(n1, 1);
-    ground.X_z_name{1} = {'constant'};
-    
-    
-    obj_stem_varset_p = stem_varset(ground.Y, ground.Y_name, [], [], ...
-                                    ground.X_beta, ground.X_beta_name, ... 
-                                    ground.X_z, ground.X_z_name);
-    
-    NOX_lat = NOX{1,1}{:,3};
-    NOX_long = NOX{1,1}{:,4};
-    
-    obj_stem_gridlist_p = stem_gridlist();
-    
-    ground.coordinates{1} = [NOX_lat(indici_righe_train,:), NOX_long(indici_righe_train, :)];
-    
-    obj_stem_grid = stem_grid(ground.coordinates{1}, 'deg', 'sparse', 'point');
-    obj_stem_gridlist_p.add(obj_stem_grid);  
-    
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%
-    %      Model building     %
-    %%%%%%%%%%%%%%%%%%%%%%%%%%%
-    
-    obj_stem_datestamp = stem_datestamp('01-01-2019 00:00','31-12-2019 00:00', T);
-    
-    shape = [];
-    
-    obj_stem_validation = [];
-    
-    obj_stem_modeltype = stem_modeltype('HDGM');
-    obj_stem_data = stem_data(obj_stem_varset_p, obj_stem_gridlist_p, ...
-                              [], [], obj_stem_datestamp, obj_stem_validation, obj_stem_modeltype, shape);
-    
-    %stem_par object creation
-    obj_stem_par_constraints=stem_par_constraints();
-    obj_stem_par_constraints.time_diagonal=0;
-    obj_stem_par = stem_par(obj_stem_data, 'exponential',obj_stem_par_constraints);
-    %stem_model object creation
-    obj_stem_model = stem_model(obj_stem_data, obj_stem_par);
-    
-    %Data transform
-    obj_stem_model.stem_data.log_transform;
-    obj_stem_model.stem_data.standardize;
-    
-    %Starting values
-    beta = obj_stem_model.get_beta0();
-    obj_stem_par.beta = beta;
-    obj_stem_par.theta_z = theta_z;
-    obj_stem_par.v_z = v_z;
-    obj_stem_par.sigma_eta = sigma_eta;
-    obj_stem_par.G = G;
-    obj_stem_par.sigma_eps = sigma_eps; 
-    
-    obj_stem_model.set_initial_values(obj_stem_par);
-    
-    %Model estimation
-    exit_toll = 0.001;
-    max_iterations = 200;
-    obj_stem_EM_options = stem_EM_options();
-    obj_stem_EM_options.max_iterations = max_iterations;
-    obj_stem_EM_options.exit_tol_par = exit_toll;
-    obj_stem_model.EM_estimate(obj_stem_EM_options);
-    obj_stem_model.set_varcov;
-    obj_stem_model.set_logL;
-    
-    %%
-    % kriging on validation stations
-    krig_coordinates = [NOX_lat(indici_righe_test, :), NOX_long(indici_righe_test, :)];
-    
-    obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
-    
-    obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
-    obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
-    
-    obj_stem_krig_options = stem_krig_options();
-    obj_stem_krig_options.block_size = 1000;
-    
-    obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
-    
-    %calcolo dell'RMSE e R2
-    y_hat = obj_stem_krig_result{1}.y_hat;
-    
-    % prendiamo le y originali
-    
-    r2 = [];
-    res = [];
-    
-    rmse = nanstd(dati_test_NOX - y_hat,1,2);
-    mse = nanvar(dati_test_NOX - y_hat,1,2);   
-   
-    r2 = 1 - nanvar(dati_test_NOX - y_hat,1,2)./nanvar(dati_test_NOX,1,2);
-    rmse_tot = mean(rmse);
-    r2_tot = mean(r2);
+%load NOX obs
+ground.Y{1} = dati_train_NOX;
+ground.Y_name{1} = 'nox';
+n1 = size(ground.Y{1}, 1);
+T = size(ground.Y{1}, 2);
 
-    %concateniamo rmse_cv e R2
-    rmse_cv = [rmse_cv rmse_tot];
-    R2_cv = [R2_cv r2_tot];
-
-    %aggiornamento parametri iterazione successiva
-    beta = obj_stem_model.stem_EM_result.stem_par.beta;
-    theta_z = obj_stem_model.stem_EM_result.stem_par.theta_z;
-    v_z = obj_stem_model.stem_EM_result.stem_par.v_z;
-    sigma_eta = obj_stem_model.stem_EM_result.stem_par.sigma_eta;
-    G = obj_stem_model.stem_EM_result.stem_par.G;
-    sigma_eps = obj_stem_model.stem_EM_result.stem_par.sigma_eps;
-
-    %salvataggio delle distribuzioni
-    
-    beta_cv = [beta_cv beta];
-    theta_z_cv = [theta_z_cv theta_z];
-    v_z_cv{1,l} = v_z;
-    sigma_eta_cv = [sigma_eta_cv sigma_eta];
-    G_cv{1,l} = G;
-    sigma_eps_cv = [sigma_eps_cv sigma_eps];
-    diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
-    log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
-    disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
-
+% da ripetere anche per il test questa procedura
+% matrice [stazioni x numero_covariate x giorni]
+NOx_lat = NOX{1,1}{:,3};
+NOx_long = NOX{1,1}{:,4};
+NOx_alt = NOX{1,1}{:,2};
+%matrice [stazioni x numero_covariate x giorni]
+X = zeros(n1, 1, T);
+X_krig = zeros(size(dati_test_NOX, 1), 1, T);
+for i=1:T    
+    X(:,1,i) = NOx_lat(indici_righe_train);
+    X(:,2,i) = NOx_long(indici_righe_train);
+    X(:,3,i) = NOx_alt(indici_righe_train);
+    X_krig(:,1,i) = NOx_lat(indici_righe_test);
+    X_krig(:,2,i) = NOx_long(indici_righe_test);
+    X_krig(:,3,i) = ones(size(dati_test_NOX, 1),1);  
+    X_krig(:,4,i) = NOx_alt(indici_righe_test);  
 end
+ground.X_beta{1} = X;
+ground.X_beta_name{1} = {'lat', 'long', 'alt'};
+ground.X_beta_name_krig{1} = {'lat', 'long', 'constant', 'alt'};
+ground.X_beta_krig{1} = X_krig;
+
+
+%X_z
+ground.X_z{1} = ones(n1, 1);
+ground.X_z_name{1} = {'constant'};
+
+
+obj_stem_varset_p = stem_varset(ground.Y, ground.Y_name, [], [], ...
+                                ground.X_beta, ground.X_beta_name, ... 
+                                ground.X_z, ground.X_z_name);
+
+NOX_lat = NOX{1,1}{:,3};
+NOX_long = NOX{1,1}{:,4};
+
+obj_stem_gridlist_p = stem_gridlist();
+
+ground.coordinates{1} = [NOX_lat(indici_righe_train,:), NOX_long(indici_righe_train, :)];
+
+obj_stem_grid = stem_grid(ground.coordinates{1}, 'deg', 'sparse', 'point');
+obj_stem_gridlist_p.add(obj_stem_grid);  
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%      Model building     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+obj_stem_datestamp = stem_datestamp('01-01-2019 00:00','31-12-2019 00:00', T);
+
+shape = [];
+
+obj_stem_validation = [];
+
+obj_stem_modeltype = stem_modeltype('HDGM');
+obj_stem_data = stem_data(obj_stem_varset_p, obj_stem_gridlist_p, ...
+                          [], [], obj_stem_datestamp, obj_stem_validation, obj_stem_modeltype, shape);
+
+%stem_par object creation
+obj_stem_par_constraints=stem_par_constraints();
+obj_stem_par_constraints.time_diagonal=0;
+obj_stem_par = stem_par(obj_stem_data, 'exponential',obj_stem_par_constraints);
+%stem_model object creation
+obj_stem_model = stem_model(obj_stem_data, obj_stem_par);
+
+%Data transform
+obj_stem_model.stem_data.log_transform;
+obj_stem_model.stem_data.standardize;
+
+%Starting values
+beta = obj_stem_model.get_beta0();
+obj_stem_par.beta = beta;
+obj_stem_par.theta_z = theta_z;
+obj_stem_par.v_z = v_z;
+obj_stem_par.sigma_eta = sigma_eta;
+obj_stem_par.G = G;
+obj_stem_par.sigma_eps = sigma_eps; 
+
+obj_stem_model.set_initial_values(obj_stem_par);
+
+%Model estimation
+exit_toll = 0.001;
+max_iterations = 200;
+obj_stem_EM_options = stem_EM_options();
+obj_stem_EM_options.max_iterations = max_iterations;
+obj_stem_EM_options.exit_tol_par = exit_toll;
+obj_stem_model.EM_estimate(obj_stem_EM_options);
+obj_stem_model.set_varcov;
+obj_stem_model.set_logL;
+
+%%
+% kriging on validation stations
+krig_coordinates = [NOX_lat(indici_righe_test, :), NOX_long(indici_righe_test, :)];
+
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
+
+obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
+obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
+
+obj_stem_krig_options = stem_krig_options();
+obj_stem_krig_options.block_size = 1000;
+
+obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
+
+%calcolo dell'RMSE e R2
+y_hat = obj_stem_krig_result{1}.y_hat;
+
+% prendiamo le y originali
+
+r2 = [];
+res = [];
+
+rmse = nanstd(dati_test_NOX - y_hat,1,2);
+mse = nanvar(dati_test_NOX - y_hat,1,2);   
+
+r2 = 1 - nanvar(dati_test_NOX - y_hat,1,2)./nanvar(dati_test_NOX,1,2);
+rmse_tot = mean(rmse);
+r2_tot = mean(r2);
+
+%concateniamo rmse_cv e R2
+rmse_cv = [rmse_cv rmse_tot];
+R2_cv = [R2_cv r2_tot];
+
+%aggiornamento parametri iterazione successiva
+beta = obj_stem_model.stem_EM_result.stem_par.beta;
+theta_z = obj_stem_model.stem_EM_result.stem_par.theta_z;
+v_z = obj_stem_model.stem_EM_result.stem_par.v_z;
+sigma_eta = obj_stem_model.stem_EM_result.stem_par.sigma_eta;
+G = obj_stem_model.stem_EM_result.stem_par.G;
+sigma_eps = obj_stem_model.stem_EM_result.stem_par.sigma_eps;
+
+%salvataggio delle distribuzioni
+
+beta_cv = [beta_cv beta];
+theta_z_cv = [theta_z_cv theta_z];
+v_z_cv{1,l} = v_z;
+sigma_eta_cv = [sigma_eta_cv sigma_eta];
+G_cv{1,l} = G;
+sigma_eps_cv = [sigma_eps_cv sigma_eps];
+diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
+log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
+disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
+
+
 
 mean(R2_cv)
 mean(rmse_cv)
@@ -322,37 +321,48 @@ krig_coordinates = [LAT(:) LON(:)];
 
 
 %}
-a = load("..\..\..\..\krig_coordinates_csv.csv");
+a = load('./kriging_regulaGrid_elevations.csv');
 
-X_krig = zeros(57*57, 1, T);
+X_krig = zeros(56*56, 1, T);
+
 for i=1:T    
-    X_krig(:,1,i) = a(1:9:end,1);
-    X_krig(:,2,i) = a(1:9:end,2);
-    X_krig(:,3,i) = ones(57*57, 1);  
-    X_krig(:,4,i) = a(1:9:end,3);  
+    X_krig(:,1,i) = a(1:end,1);
+    X_krig(:,2,i) = a(1:end,2);
+    X_krig(:,3,i) = ones(56*56, 1);  
+    X_krig(:,4,i) = a(1:end,3);  
 end
 ground.X_beta_name_krig{1} = {'lat', 'long', 'constant', 'alt'};
 ground.X_beta_krig{1} = X_krig;
 
-krig_coordinates = [a(1:9:end,1), a(1:9:end,2)];
-    
-obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
-    
-clear X_krig
+krig_coordinates = [a(1:end,1), a(1:end,2)];
 
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'regular','pixel', [56, 56], 'square',0.75,0.75);
+    
 obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
 obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
 
 obj_stem_krig_options = stem_krig_options();
-obj_stem_krig_options.block_size = 1000;
-clear ground
+obj_stem_krig_options.block_size = 100;
 
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 
-figure;
-contourf(reshape(a(1:9:end,2), 57,57), reshape(a(1:9:end,1), 57,57), reshape(a(1:9:end,3), 57,57), obj_stem_krig_result{1,1}.y_hat(:,:,50));
+%%%%%% CODICE FUNZIONANTE %%%%%%%%%%%
+figure
+colorbar
+hold on
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),obj_stem_krig_result{1,1}.y_hat(:,:,9),'DisplayType','texturemap');
+set(h,'FaceColor','flat')
+geoshow(madrid,'FaceColor','none')
+geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,2),...
+                    'DisplayType','multipoint','Marker','*','MarkerEdgeColor','y');
 
-
-
+figure
+colorbar
+hold on
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),sqrt(obj_stem_krig_result{1,1}.diag_Var_y_hat(:,:,9)),'DisplayType','texturemap');
+set(h,'FaceColor','flat')
+geoshow(madrid,'FaceColor','none')
+geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,2),...
+                    'DisplayType','multipoint','Marker','*','MarkerEdgeColor','r');
 
 

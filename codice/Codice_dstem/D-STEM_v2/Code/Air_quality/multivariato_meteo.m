@@ -416,8 +416,8 @@ for l = 1:size(dati_NOX, 1)
     % training
     dati_train_PM25 = dati_PM25;  
     if sum(totali_lat == NOx_lat_test) > 1 & sum(totali_long == NOx_long_test) > 1
-        PM25_lat = setdiff(PM25_lat, NOx_lat_test);
-        PM25_long = setdiff(PM25_long, NOx_long_test);        
+        PM25_lat = setdiff(PM25_lat, NOx_lat_test, 'stable');
+        PM25_long = setdiff(PM25_long, NOx_long_test, 'stable');        
         righe_da_togliere = PM25{1,1}{:,3} == NOx_lat_test;
         PM25_alt = PM25_alt(not(righe_da_togliere));
         dati_train_PM25 = dati_train_PM25(not(righe_da_togliere),:);

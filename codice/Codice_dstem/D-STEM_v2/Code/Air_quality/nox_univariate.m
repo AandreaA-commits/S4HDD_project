@@ -105,95 +105,230 @@ end
 
 
 %% INIZIO CROSSVALIDAZIONE
+% LOOGCV
+indici_totali = 1:size(dati_NOX, 1);
+
+rmse_cv = [];
+R2_cv = [];
+
+beta_cv = [];
+theta_z_cv = [];
+v_z_cv = {};
+sigma_eta_cv = [];
+G_cv = {};
+sigma_eps_cv = [];
+diag_varcov_cv = {};
+log_likelihood_cv = [];
+
+%Setting parametri inziali
+beta = [];
+theta_z = 0.1;
+v_z = 0.2;
+sigma_eta = 1;
+G = 0.9;
+sigma_eps = 0.1; 
 
 
-%% script per divisione dati di training e dati di testing (per stazione)
-%numero delle stazioni totali
-n = size(dati_NOX, 1); 
+for l = 1:size(dati_NOX, 1)
+    indici_righe_test = l;
+    indici_righe_train = setdiff(indici_totali, indici_righe_test, 'stable');
 
-% Specifica la percentuale desiderata di righe da estrarre
-percentuale_righe = 0.75;
-
-% Calcola il numero desiderato di righe
-numero_righe = round(percentuale_righe * n);
-
-% indici di train e test
-indici_totali = 1:n;
-indici_righe_train = randperm(n, numero_righe);
-indici_righe_test = setdiff(indici_totali, indici_righe_train);
-
-%indice manuale dati test  e train
-indici_righe_train = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
-indici_righe_test = [1 2 4 5 8 24]';
-
-% Estrazione dati train e test
-dati_train_NOX = dati_NOX(indici_righe_train, :);
-dati_test_NOX = dati_NOX(indici_righe_test, :);
-
-%Estrazione coordinate di train e di test con verifica
-NOx_lat_train = NOX{1,1}{:,3}(indici_righe_train, :);
-NOx_long_test = NOX{1,1}{:,4}(indici_righe_test, :);
+    % Estrazione dati train e test
+    dati_train_NOX = dati_NOX(indici_righe_train, :);
+    dati_test_NOX = dati_NOX(indici_righe_test, :);
 
 
+    %% script per divisione dati di training e dati di testing (per stazione)
+    %numero delle stazioni totali
+    n = size(dati_NOX, 1); 
+    
+    % Specifica la percentuale desiderata di righe da estrarre
+    percentuale_righe = 0.75;
+    
+    % Calcola il numero desiderato di righe
+    numero_righe = round(percentuale_righe * n);
+    
+    % indici di train e test
+    indici_totali = 1:n;
+    indici_righe_train = randperm(n, numero_righe);
+    indici_righe_test = setdiff(indici_totali, indici_righe_train);
+    
+    %indice manuale dati test  e train
+    indici_righe_train = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
+    indici_righe_test = [1 2 4 5 8 24]';
+    
+    % Estrazione dati train e test
+    dati_train_NOX = dati_NOX(indici_righe_train, :);
+    dati_test_NOX = dati_NOX(indici_righe_test, :);
+    
+    %Estrazione coordinate di train e di test con verifica
+    NOx_lat_train = NOX{1,1}{:,3}(indici_righe_train, :);
+    NOx_long_test = NOX{1,1}{:,4}(indici_righe_test, :);
+    
+    
+    
+    %load NOX obs
+    ground.Y{1} = dati_train_NOX;
+    ground.Y_name{1} = 'nox';
+    n1 = size(ground.Y{1}, 1);
+    T = size(ground.Y{1}, 2);
+    
+    % da ripetere anche per il test questa procedura
+    % matrice [stazioni x numero_covariate x giorni]
+    NOx_lat = NOX{1,1}{:,3};
+    NOx_long = NOX{1,1}{:,4};
+    NOx_alt = NOX{1,1}{:,2};
+    %matrice [stazioni x numero_covariate x giorni]
+    X = zeros(n1, 1, T);
+    X_krig = zeros(size(dati_test_NOX, 1), 1, T);
+    for i=1:T
+        if is_weekend(i) == 0
+            %creiamo una matrice n_stazioni x 1
+            X(:,1,i) = zeros(n1,1);
+            X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
+        else
+            X(:,1,i) = ones(n1,1);
+            X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
+        end 
+        X(:,2,i) = NOx_lat(indici_righe_train);
+        X(:,3,i) = NOx_long(indici_righe_train);
+        X(:,4,i) = NOx_alt(indici_righe_train);
+        X_krig(:,2,i) = NOx_lat(indici_righe_test);
+        X_krig(:,3,i) = NOx_long(indici_righe_test);
+        X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1);  
+        X_krig(:,5,i) = NOx_alt(indici_righe_test);  
+    end
+    ground.X_beta{1} = X;
+    ground.X_beta_name{1} = {'weekend', 'lat', 'long', 'alt'};
+    ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant', 'alt'};
+    ground.X_beta_krig{1} = X_krig;
+    
+    
+    %X_z
+    ground.X_z{1} = ones(n1, 1);
+    ground.X_z_name{1} = {'constant'};
+    
+    
+    obj_stem_varset_p = stem_varset(ground.Y, ground.Y_name, [], [], ...
+                                    ground.X_beta, ground.X_beta_name, ... 
+                                    ground.X_z, ground.X_z_name);
+    
+    
+    
+    NOX_lat = NOX{1,1}{:,3};
+    NOX_long = NOX{1,1}{:,4};
+    
+    obj_stem_gridlist_p = stem_gridlist();
+    
+    ground.coordinates{1} = [NOX_lat(indici_righe_train,:), NOX_long(indici_righe_train, :)];
+    
+    obj_stem_grid = stem_grid(ground.coordinates{1}, 'deg', 'sparse', 'point');
+    obj_stem_gridlist_p.add(obj_stem_grid);
+    
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+    %      Model building     %
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    obj_stem_datestamp = stem_datestamp('01-01-2019 00:00','31-12-2019 00:00', T);
+    
+    shape = [];
+    
+    obj_stem_validation = [];
+    
+    obj_stem_modeltype = stem_modeltype('HDGM');
+    obj_stem_data = stem_data(obj_stem_varset_p, obj_stem_gridlist_p, ...
+                              [], [], obj_stem_datestamp, obj_stem_validation, obj_stem_modeltype, shape);
+    
+    %stem_par object creation
+    obj_stem_par_constraints=stem_par_constraints();
+    obj_stem_par_constraints.time_diagonal=0;
+    obj_stem_par = stem_par(obj_stem_data, 'exponential',obj_stem_par_constraints);
+    %stem_model object creation
+    obj_stem_model = stem_model(obj_stem_data, obj_stem_par);
+    
+    %Data transform
+    obj_stem_model.stem_data.log_transform;
+    obj_stem_model.stem_data.standardize;
+    
+    %Starting values
+    beta = obj_stem_model.get_beta0();
+    obj_stem_par.beta = beta;
+    obj_stem_par.theta_z = theta_z;
+    obj_stem_par.v_z = v_z;
+    obj_stem_par.sigma_eta = sigma_eta;
+    obj_stem_par.G = G;
+    obj_stem_par.sigma_eps = sigma_eps; 
+    
+    obj_stem_model.set_initial_values(obj_stem_par);
+    
+    %Model estimation
+    exit_toll = 0.001;
+    max_iterations = 200;
+    obj_stem_EM_options = stem_EM_options();
+    obj_stem_EM_options.max_iterations = max_iterations;
+    obj_stem_EM_options.exit_tol_par = exit_toll;
+    obj_stem_model.EM_estimate(obj_stem_EM_options);
+    obj_stem_model.set_varcov;
+    obj_stem_model.set_logL;
 
-%load NOX obs
-ground.Y{1} = dati_train_NOX;
-ground.Y_name{1} = 'nox';
-n1 = size(ground.Y{1}, 1);
-T = size(ground.Y{1}, 2);
 
-% da ripetere anche per il test questa procedura
-% matrice [stazioni x numero_covariate x giorni]
-NOx_lat = NOX{1,1}{:,3};
-NOx_long = NOX{1,1}{:,4};
-NOx_alt = NOX{1,1}{:,2};
-%matrice [stazioni x numero_covariate x giorni]
-X = zeros(n1, 1, T);
-X_krig = zeros(size(dati_test_NOX, 1), 1, T);
-for i=1:T
-    if is_weekend(i) == 0
-        %creiamo una matrice n_stazioni x 1
-        X(:,1,i) = zeros(n1,1);
-        X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
-    else
-        X(:,1,i) = ones(n1,1);
-        X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
-    end 
-    X(:,2,i) = NOx_lat(indici_righe_train);
-    X(:,3,i) = NOx_long(indici_righe_train);
-    X(:,4,i) = NOx_alt(indici_righe_train);
-    X_krig(:,2,i) = NOx_lat(indici_righe_test);
-    X_krig(:,3,i) = NOx_long(indici_righe_test);
-    X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1);  
-    X_krig(:,5,i) = NOx_alt(indici_righe_test);  
+    %%
+    % kriging on validation stations
+    krig_coordinates = [NOX_lat(indici_righe_test, :), NOX_long(indici_righe_test, :)];
+    
+    obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
+    
+    obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
+    obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
+    
+    obj_stem_krig_options = stem_krig_options();
+    obj_stem_krig_options.block_size = 1000;
+    
+    obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
+    
+    %calcolo dell'RMSE e R2
+    y_hat = obj_stem_krig_result{1}.y_hat;
+    
+    % prendiamo le y originali
+    
+    r2 = [];
+    res = [];
+    
+    rmse = nanstd(dati_test_NOX - y_hat,1,2);
+    mse = nanvar(dati_test_NOX - y_hat,1,2);   
+   
+    r2 = 1 - nanvar(dati_test_NOX - y_hat,1,2)./nanvar(dati_test_NOX,1,2);
+    rmse_tot = mean(rmse);
+    r2_tot = mean(r2);
+
+    %concateniamo rmse_cv e R2
+    rmse_cv = [rmse_cv rmse_tot];
+    R2_cv = [R2_cv r2_tot];
+
+    %aggiornamento parametri iterazione successiva
+    beta = obj_stem_model.stem_EM_result.stem_par.beta;
+    theta_z = obj_stem_model.stem_EM_result.stem_par.theta_z;
+    v_z = obj_stem_model.stem_EM_result.stem_par.v_z;
+    sigma_eta = obj_stem_model.stem_EM_result.stem_par.sigma_eta;
+    G = obj_stem_model.stem_EM_result.stem_par.G;
+    sigma_eps = obj_stem_model.stem_EM_result.stem_par.sigma_eps;
+
+    %salvataggio delle distribuzioni
+    
+    beta_cv = [beta_cv beta];
+    theta_z_cv = [theta_z_cv theta_z];
+    v_z_cv{1,l} = v_z;
+    sigma_eta_cv = [sigma_eta_cv sigma_eta];
+    G_cv{1,l} = G;
+    sigma_eps_cv = [sigma_eps_cv sigma_eps];
+    diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
+    log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
+    disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
+
 end
-ground.X_beta{1} = X;
-ground.X_beta_name{1} = {'weekend', 'lat', 'long', 'alt'};
-ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant', 'alt'};
-ground.X_beta_krig{1} = X_krig;
 
-
-%X_z
-ground.X_z{1} = ones(n1, 1);
-ground.X_z_name{1} = {'constant'};
-
-
-obj_stem_varset_p = stem_varset(ground.Y, ground.Y_name, [], [], ...
-                                ground.X_beta, ground.X_beta_name, ... 
-                                ground.X_z, ground.X_z_name);
-
-
-
-NOX_lat = NOX{1,1}{:,3};
-NOX_long = NOX{1,1}{:,4};
-
-obj_stem_gridlist_p = stem_gridlist();
-
-ground.coordinates{1} = [NOX_lat(indici_righe_train,:), NOX_long(indici_righe_train, :)];
-
-obj_stem_grid = stem_grid(ground.coordinates{1}, 'deg', 'sparse', 'point');
-obj_stem_gridlist_p.add(obj_stem_grid);
-
+mean(rmse_cv)
+mean(R2_cv)
 
 
 %% Prova digrafico
@@ -209,90 +344,5 @@ for i=1:length(madrid)
 end
 
 
-%utilizzare geoplot per fare delle linee sulla mappa
-
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%      Model building     %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-obj_stem_datestamp = stem_datestamp('01-01-2019 00:00','31-12-2019 00:00', T);
-
-shape = [];
-
-obj_stem_validation = [];
-
-obj_stem_modeltype = stem_modeltype('HDGM');
-obj_stem_data = stem_data(obj_stem_varset_p, obj_stem_gridlist_p, ...
-                          [], [], obj_stem_datestamp, obj_stem_validation, obj_stem_modeltype, shape);
-
-%stem_par object creation
-obj_stem_par_constraints=stem_par_constraints();
-obj_stem_par_constraints.time_diagonal=0;
-obj_stem_par = stem_par(obj_stem_data, 'exponential',obj_stem_par_constraints);
-%stem_model object creation
-obj_stem_model = stem_model(obj_stem_data, obj_stem_par);
-
-%Data transform
-obj_stem_model.stem_data.log_transform;
-obj_stem_model.stem_data.standardize;
-
-%Starting values
-obj_stem_par.beta = obj_stem_model.get_beta0();
-obj_stem_par.theta_z = 0.1;
-obj_stem_par.v_z = 0.2;
-obj_stem_par.sigma_eta = 1;
-obj_stem_par.G = 0.9;
-obj_stem_par.sigma_eps = 0.1; 
-
-obj_stem_model.set_initial_values(obj_stem_par);
-
-%Model estimation
-exit_toll = 0.001;
-max_iterations = 200;
-obj_stem_EM_options = stem_EM_options();
-obj_stem_EM_options.max_iterations = max_iterations;
-obj_stem_EM_options.exit_tol_par = exit_toll;
-obj_stem_model.EM_estimate(obj_stem_EM_options);
-obj_stem_model.set_varcov;
-obj_stem_model.set_logL;
-
-
-obj_stem_model.print;
-
-%%
-% kriging on validation stations
-krig_coordinates = [NOX_lat(indici_righe_test, :), NOX_long(indici_righe_test, :)];
-
-obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
-
-obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
-obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
-
-obj_stem_krig_options = stem_krig_options();
-obj_stem_krig_options.block_size = 1000;
-
-obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
-
-%calcolo dell'RMSE e R2
-y_hat = obj_stem_krig_result{1}.y_hat;
-
-
-% prendiamo le y originali
-
-r2 = [];
-res = [];
-
-rmse = nanstd(dati_test_NOX - y_hat,1,2);
-
-mse = nanvar(dati_test_NOX - y_hat,1,2);
-
-
-
-rmse
-r2 = 1 - nanvar(dati_test_NOX - y_hat,1,2)./nanvar(dati_test_NOX,1,2);
-rmse_tot = mean(rmse)
-mean(r2)
 
 

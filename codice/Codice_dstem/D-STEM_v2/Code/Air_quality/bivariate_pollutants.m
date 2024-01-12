@@ -108,34 +108,7 @@ for i = 4*24+1:size(is_weekend,2) % itero tutte le ore dell'anno
     end    
 end
 
-%% script per divisione dati di training e dati di testing (per stazione)
-%numero delle stazioni totali
-ns1 = size(dati_NOX, 1); 
-ns2 = size(dati_PM25, 1); 
-
-% Specifica la percentuale desiderata di righe da estrarre
-percentuale_righe = 0.75;
-
-% Calcola il numero desiderato di righe
-numero_righe1 = round(percentuale_righe * ns1);
-numero_righe2 = round(percentuale_righe * ns2);
-
-% indici di train e test
-indici_totali1 = 1:ns1;
-indici_righe_train1 = randperm(ns1, numero_righe1);
-indici_righe_test1 = setdiff(indici_totali1, indici_righe_train1);
-flag = 0;
-indici_righe_train1 = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
-indici_righe_test1 = [1 2 4 5 8 24]';
-
-indici_totali2 = 1:ns2;
-indici_righe_train2 = randperm(ns2, numero_righe2);
-indici_righe_test2 = setdiff(indici_totali2, indici_righe_train2);
-
-indici_righe_test2 = [1];
-indici_righe_train2 = [5 3 6 4 2]';
-
-% LOOGCV NOX
+%% LOOGCV NOX
 indici_totali = 1:size(dati_NOX, 1)+size(dati_PM25,1);
 
 rmse_cv = [];
@@ -181,8 +154,8 @@ for l = 1:size(dati_NOX, 1)
     % training
     dati_train_PM25 = dati_PM25;  
     if sum(totali_lat == NOx_lat_test) > 1 & sum(totali_long == NOx_long_test) > 1
-        PM25_lat = setdiff(PM25_lat, NOx_lat_test);
-        PM25_long = setdiff(PM25_long, NOx_long_test);        
+        PM25_lat = setdiff(PM25_lat, NOx_lat_test, 'stable');
+        PM25_long = setdiff(PM25_long, NOx_long_test, 'stable');        
         righe_da_togliere = PM25{1,1}{:,3} == NOx_lat_test;
         PM25_alt = PM25_alt(not(righe_da_togliere));
         dati_train_PM25 = dati_train_PM25(not(righe_da_togliere),:);

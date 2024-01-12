@@ -97,7 +97,7 @@ numero_righe = round(percentuale_righe * n);
 % indici di train e test
 indici_totali = 1:n;
 indici_righe_train = randperm(n, numero_righe);
-indici_righe_test = setdiff(indici_totali, indici_righe_train);
+indici_righe_test = setdiff(indici_totali, indici_righe_train, 'stable');
 
 indici_righe_test = [1];
 indici_righe_train = [5 3 6 4 2]';
@@ -269,15 +269,12 @@ ground.X_beta_krig{1} = X_krig;
 krig_coordinates = [a(1:end,1), a(1:end,2)];
 
 obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'regular','pixel', [56, 56], 'square',0.75,0.75);
-    
-clear X_krig
 
 obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
 obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
 
 obj_stem_krig_options = stem_krig_options();
-obj_stem_krig_options.block_size = 1000;
-clear ground
+obj_stem_krig_options.block_size = 100;
 
 obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
 
@@ -304,31 +301,6 @@ geoshow(obj_stem_krig_result{1,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig
                     'DisplayType','multipoint','Marker','*','MarkerEdgeColor','b');
 
 %%%%%%%%%% CODICE FUNZIONANTE FINE %%%%%%%%%%%%
-
-
-figure;
-contourf(reshape(a(1:end,2), 56,56), reshape(a(1:end,1), 56,56), reshape(obj_stem_krig_result{1,1}.y_hat(:,16),56,56));
-colorbar;
-caxis([5 40])
-
-figure
-obj_stem_krig_result{1}.plot(200)
-
-plot(obj_stem_krig_result, 0,'both')
-
-figure
-imagesc(reshape(obj_stem_krig_result{1,1}.y_hat(:,1),56,56))
-
-figure
-surf(reshape(a(1:9:end,2), 56,56)', reshape(a(1:9:end,1), 56,56)', ones(56), reshape(obj_stem_krig_result{1,1}.y_hat(:,1),56,56)')
-hold on
-for i=1:length(madrid)
-    geoplot(madrid(i).Y, madrid(i).X, "k-");
-end
-
-figure
-imagesc(reshape(obj_stem_krig_result{1, 1}.diag_Var_y_hat(:,1), 56,56))
-
 
 
 
