@@ -238,6 +238,16 @@ for mese = 1:12
     end
 end
 
+%% Rimozione del doppio sensore su una sola stazione
+for mese = 1:12
+    TEMPERATURA{1,mese}(end, :) = [];
+    TEMPERATURA{1,mese}(end-2, :) = [];
+    
+    UMIDITA{1,mese}(end, :) = [];
+    UMIDITA{1,mese}(end-2, :) = [];
+    
+end
+
 dati_NOX = [];
 dati_PM25 = [];
 dati_VELVENTO = [];
@@ -299,76 +309,6 @@ for i = 4*24+1:size(is_weekend,2) % itero tutte le ore dell'anno
     end    
 end
 
-%% script per divisione dati di training e dati di testing (per stazione)
-%numero delle stazioni totali
-ns1 = size(dati_NOX, 1); 
-ns2 = size(dati_PM25, 1); 
-ns3= size(dati_TEMPERATURA, 1); 
-ns4 = size(dati_UMIDITA, 1); 
-ns5 = size(dati_VELVENTO, 1); 
-ns6 = size(dati_PRESSIONE, 1); 
-
-
-% Specifica la percentuale desiderata di righe da estrarre
-percentuale_righe = 0.75;
-
-% Calcola il numero desiderato di righe
-numero_righe1 = round(percentuale_righe * ns1);
-numero_righe2 = round(percentuale_righe * ns2);
-numero_righe3 = round(percentuale_righe * ns3);
-numero_righe4 = round(percentuale_righe * ns4);
-numero_righe5 = round(percentuale_righe * ns5);
-numero_righe6 = round(percentuale_righe * ns6);
-
-% indici di train e test
-indici_totali1 = 1:ns1;
-indici_righe_train1 = randperm(ns1, numero_righe1);
-indici_righe_test1 = setdiff(indici_totali1, indici_righe_train1);
-
-indici_righe_train1 = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
-indici_righe_test1 = [1 2 4 5 8 24]';
-
-indici_totali2 = 1:ns2;
-indici_righe_train2 = randperm(ns2, numero_righe2);
-indici_righe_test2 = setdiff(indici_totali2, indici_righe_train2);
-
-indici_righe_test2 = [1];
-indici_righe_train2 = [5 3 6 4 2]';
-
-indici_totali3 = 1:ns3;
-indici_righe_train3 = randperm(ns3, numero_righe3);
-indici_righe_test3 = setdiff(indici_totali3, indici_righe_train3);
-
-indici_totali4 = 1:ns4;
-indici_righe_train4 = randperm(ns4, numero_righe4);
-indici_righe_test4 = setdiff(indici_totali4, indici_righe_train4);
-
-indici_totali5 = 1:ns5;
-indici_righe_train5 = randperm(ns5, numero_righe5);
-indici_righe_test5 = setdiff(indici_totali5, indici_righe_train5);
-
-indici_totali6 = 1:ns6;
-indici_righe_train6 = randperm(ns6, numero_righe6);
-indici_righe_test6 = setdiff(indici_totali6, indici_righe_train6);
-
-% Estrazione dati train e test
-dati_train_NOX = dati_NOX(indici_righe_train1, :);
-dati_test_NOX = dati_NOX(indici_righe_test1, :);
-
-dati_train_PM25 = dati_PM25(indici_righe_train2, :);
-dati_test_PM25 = dati_PM25(indici_righe_test2, :);
-
-dati_train_TEMPERATURA = dati_TEMPERATURA(indici_righe_train3, :);
-dati_test_TEMPERATURA = dati_TEMPERATURA(indici_righe_test3, :);
-
-dati_train_UMIDITA = dati_UMIDITA(indici_righe_train4, :);
-dati_test_UMIDITA = dati_UMIDITA(indici_righe_test4, :);
-
-dati_train_VELVENTO = dati_VELVENTO(indici_righe_train5, :);
-dati_test_VELVENTO = dati_VELVENTO(indici_righe_test5, :);
-
-dati_train_PRESSIONE = dati_PRESSIONE(indici_righe_train6, :);
-dati_test_PRESSIONE = dati_PRESSIONE(indici_righe_test6, :);
 
 % LOOGCV NOX
 indici_totali = 1:size(dati_NOX, 1)+size(dati_PM25,1);

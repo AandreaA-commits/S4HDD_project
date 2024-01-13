@@ -137,35 +137,9 @@ for l = 1:size(dati_NOX, 1)
     dati_train_NOX = dati_NOX(indici_righe_train, :);
     dati_test_NOX = dati_NOX(indici_righe_test, :);
 
-
-    %% script per divisione dati di training e dati di testing (per stazione)
-    %numero delle stazioni totali
-    n = size(dati_NOX, 1); 
-    
-    % Specifica la percentuale desiderata di righe da estrarre
-    percentuale_righe = 0.75;
-    
-    % Calcola il numero desiderato di righe
-    numero_righe = round(percentuale_righe * n);
-    
-    % indici di train e test
-    indici_totali = 1:n;
-    indici_righe_train = randperm(n, numero_righe);
-    indici_righe_test = setdiff(indici_totali, indici_righe_train);
-    
-    %indice manuale dati test  e train
-    indici_righe_train = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
-    indici_righe_test = [1 2 4 5 8 24]';
-    
-    % Estrazione dati train e test
-    dati_train_NOX = dati_NOX(indici_righe_train, :);
-    dati_test_NOX = dati_NOX(indici_righe_test, :);
-    
     %Estrazione coordinate di train e di test con verifica
     NOx_lat_train = NOX{1,1}{:,3}(indici_righe_train, :);
     NOx_long_test = NOX{1,1}{:,4}(indici_righe_test, :);
-    
-    
     
     %load NOX obs
     ground.Y{1} = dati_train_NOX;
@@ -329,6 +303,12 @@ end
 
 mean(rmse_cv)
 mean(R2_cv)
+mean(log_likelihood_cv)
+
+obj_stem_model.print
+
+
+
 
 
 %% Prova digrafico
