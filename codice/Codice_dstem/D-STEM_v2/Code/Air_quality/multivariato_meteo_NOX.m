@@ -452,8 +452,8 @@ for l = 1:size(dati_NOX, 1)
     end
     ground.X_beta{2} = X;
     ground.X_beta_name{2} = {'weekend', 'lat', 'long','alt'};
-    %ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant','alt'};
-    %ground.X_beta_krig{2} = X_krig;
+    ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant','alt'};
+    ground.X_beta_krig{2} = X;
     
     
     TEMPERATURA_lat = TEMPERATURA{1,1}{:,3};
@@ -610,7 +610,7 @@ for l = 1:size(dati_NOX, 1)
     obj_stem_model = stem_model(obj_stem_data, obj_stem_par);
     
     
-    %Data transform
+    %Data transformv 
     obj_stem_model.stem_data.log_transform;
     obj_stem_model.stem_data.standardize;
     
@@ -711,6 +711,11 @@ mean(rmse_cv)
 %media delle t_stat
 mean(t_stat, 2)
 
+%% run 5 OUTLIER
+mean([R2_cv(1:4) R2_cv(6:end)])
+mean([rmse_cv(1:4) rmse_cv(6:end)])
+mean([t_stat(:, 1:4) t_stat(:, 6:end)], 2)
+
 %% salvataggio in .mat
 result_data_multivariato_meteo_NOX{1} = beta_cv;
 result_data_multivariato_meteo_NOX{2} = theta_z_cv;
@@ -723,4 +728,6 @@ result_data_multivariato_meteo_NOX{8} = log_likelihood_cv;
 result_data_multivariato_meteo_NOX{9} = t_stat;
 
 save("result_data_multivariato_meteo_NOX.mat", 'result_data_multivariato_meteo_NOX')
+
+%% Significativi  
  

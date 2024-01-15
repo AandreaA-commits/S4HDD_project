@@ -427,8 +427,8 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     end
     ground.X_beta{1} = X;
     ground.X_beta_name{1} = {'weekend', 'lat', 'long','alt'};
-    %ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant','alt'};
-    %ground.X_beta_krig{1} = X_krig;
+    ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant','alt'};
+    ground.X_beta_krig{1} = X;
     
     
     %matrice [stazioni x numero_covariate x giorni]
@@ -692,9 +692,10 @@ end
 
 %Calcolo delle t_stat
 t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+t = size(dati_NOX,1);
 for c =1:size(beta_cv, 2)
     for r = 1:size(beta_cv,1)
-        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c}(r,1)));
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c+t}(r,1)));
         disp(t_stat(r,c))
     end
 end
@@ -704,6 +705,12 @@ mean(rmse_cv)
 
 %media delle t_stat
 mean(t_stat, 2)
+
+%% run 6 OUTLIER
+mean([R2_cv(1:5) R2_cv(7:end)])
+mean([rmse_cv(1:5) rmse_cv(7:end)])
+mean([t_stat(:, 1:5) t_stat(:, 7:end)], 2)
+
 
 %% salvataggio in .mat
 result_data_multivariato_meteo_PM10{1} = beta_cv;
@@ -716,5 +723,5 @@ result_data_multivariato_meteo_PM10{7} = diag_varcov_cv;
 result_data_multivariato_meteo_PM10{8} = log_likelihood_cv;
 result_data_multivariato_meteo_PM10{9} = t_stat;
 
-save("result_data_multivariato_meteo_NOX.mat", 'result_data_multivariato_meteo_PM10')
+save("result_data_multivariato_meteo_PM10.mat", 'result_data_multivariato_meteo_PM10')
  
