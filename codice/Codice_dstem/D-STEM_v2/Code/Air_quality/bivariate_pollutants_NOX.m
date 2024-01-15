@@ -15,7 +15,7 @@ rng(4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 NOX = dati_pollutants_2019(7, 2:end);
-PM25 = dati_pollutants_2019(5, 2:end);
+PM25 = dati_pollutants_2019(6, 2:end);
 
 
 %% RIMOZIONE STAZIONI CHE NON HANNO MISURAZIONI IN TUTTI I MESI DELLA ANNO
@@ -85,8 +85,8 @@ for i = 1:size(NOX, 2)
     dati_PM25 = [dati_PM25 colonne_numeriche];    
 end
 
-dati_PM25 = dati_PM25(:,14:24:end)  
-dati_NOX = dati_NOX(:,14:24:end)  
+dati_PM25 = dati_PM25(:,14:24:end);
+dati_NOX = dati_NOX(:,14:24:end);
 
 
 % creazione vettore covariata is_weekend
@@ -126,9 +126,9 @@ log_likelihood_cv = [];
 beta = [];
 theta_z = 0.1;
 v_z = 0.2*eye(2);
-sigma_eta = [1 1];
+sigma_eta = diag([1 1]);
 G = 0.9*eye(2);
-sigma_eps = [0.1 0.1]; 
+sigma_eps = diag([0.1 0.1]); 
 
 totali_lat = [NOX{1,1}{:,3}; PM25{1,1}{:,3}];
 totali_long = [NOX{1,1}{:,4}; PM25{1,1}{:,4}];
@@ -282,18 +282,19 @@ for l = 1:size(dati_NOX, 1)
     obj_stem_model.stem_data.standardize;
     
     %Starting values
-    obj_stem_par.beta = obj_stem_model.get_beta0();
-    obj_stem_par.theta_z = 0.1;
-    obj_stem_par.v_z = eye(2)*0.1;
-    obj_stem_par.sigma_eta = diag([0.02 0.02]);
-    obj_stem_par.G = diag(0.9*ones(2,1));
-    obj_stem_par.sigma_eps = diag([0.01 0.3]); 
+    beta = obj_stem_model.get_beta0();
+    obj_stem_par.beta = beta;
+    obj_stem_par.theta_z = theta_z;
+    obj_stem_par.v_z = v_z;
+    obj_stem_par.sigma_eta = sigma_eta;
+    obj_stem_par.G = G;
+    obj_stem_par.sigma_eps = sigma_eps; 
     
     obj_stem_model.set_initial_values(obj_stem_par);
     
     %Model estimation
     exit_toll = 0.001;
-    max_iterations = 200;
+    max_iterations = 400;
     obj_stem_EM_options = stem_EM_options();
     obj_stem_EM_options.max_iterations = max_iterations;
     obj_stem_EM_options.exit_tol_par = exit_toll;
@@ -357,6 +358,36 @@ for l = 1:size(dati_NOX, 1)
     sigma_eps_cv = [sigma_eps_cv sigma_eps];
     diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
     log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
-    disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
+    disp(["CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l)]);
 
 end
+
+
+%Calcolo delle t_stat
+t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+for c =1:size(beta_cv, 2)
+    for r = 1:size(beta_cv,1)
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c}(r,1)));
+        disp(t_stat(r,c))
+    end
+end
+
+mean(R2_cv)
+mean(rmse_cv)
+
+%media delle t_stat
+mean(t_stat, 2)
+
+%% salvataggio in .mat
+result_data_biavariate_NOX{1} = beta_cv;
+result_data_biavariate_NOX{2} = theta_z_cv;
+result_data_biavariate_NOX{3} = v_z_cv;
+result_data_biavariate_NOX{4} = sigma_eta_cv;
+result_data_biavariate_NOX{5} = G_cv;
+result_data_biavariate_NOX{6} = sigma_eps_cv;
+result_data_biavariate_NOX{7} = diag_varcov_cv;
+result_data_biavariate_NOX{8} = log_likelihood_cv;
+result_data_biavariate_NOX{9} = t_stat;
+
+save("result_data_biavariate_NOX.mat", 'result_data_biavariate_NOX')
+

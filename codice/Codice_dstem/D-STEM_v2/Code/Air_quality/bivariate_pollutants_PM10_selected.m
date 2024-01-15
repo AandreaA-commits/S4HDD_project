@@ -15,7 +15,7 @@ rng(4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 NOX = dati_pollutants_2019(7, 2:end);
-PM25 = dati_pollutants_2019(5, 2:end);
+PM25 = dati_pollutants_2019(6, 2:end);
 
 
 %% RIMOZIONE STAZIONI CHE NON HANNO MISURAZIONI IN TUTTI I MESI DELLA ANNO
@@ -85,8 +85,8 @@ for i = 1:size(NOX, 2)
     dati_PM25 = [dati_PM25 colonne_numeriche];    
 end
 
-dati_PM25 = dati_PM25(:,14:24:end)  
-dati_NOX = dati_NOX(:,14:24:end)  
+dati_PM25 = dati_PM25(:,14:24:end);
+dati_NOX = dati_NOX(:,14:24:end);
 
 
 % creazione vettore covariata is_weekend
@@ -108,32 +108,6 @@ for i = 4*24+1:size(is_weekend,2) % itero tutte le ore dell'anno
     end    
 end
 
-%% script per divisione dati di training e dati di testing (per stazione)
-%numero delle stazioni totali
-ns1 = size(dati_NOX, 1); 
-ns2 = size(dati_PM25, 1); 
-
-% Specifica la percentuale desiderata di righe da estrarre
-percentuale_righe = 0.75;
-
-% Calcola il numero desiderato di righe
-numero_righe1 = round(percentuale_righe * ns1);
-numero_righe2 = round(percentuale_righe * ns2);
-
-% indici di train e test
-indici_totali1 = 1:ns1;
-indici_righe_train1 = randperm(ns1, numero_righe1);
-indici_righe_test1 = setdiff(indici_totali1, indici_righe_train1);
-
-indici_righe_train1 = [18 22	19 14	13	6	20	3	7	23	17	16	9	10	12	21	11	15]';
-indici_righe_test1 = [1 2 4 5 8 24]';
-
-indici_totali2 = 1:ns2;
-indici_righe_train2 = randperm(ns2, numero_righe2);
-indici_righe_test2 = setdiff(indici_totali2, indici_righe_train2);
-
-indici_righe_test2 = [1];
-indici_righe_train2 = [5 3 6 4 2]';
 
 % LOOGCV NOX
 indici_totali = 1:size(dati_NOX, 1)+size(dati_PM25,1);
@@ -153,9 +127,9 @@ log_likelihood_cv = [];
 beta = [];
 theta_z = 0.1;
 v_z = 0.2*eye(2);
-sigma_eta = [1 1];
+sigma_eta = diag([1 1]);
 G = 0.9*eye(2);
-sigma_eps = [0.1 0.1]; 
+sigma_eps = diag([0.1 0.1]); 
 
 totali_lat = [NOX{1,1}{:,3}; PM25{1,1}{:,3}];
 totali_long = [NOX{1,1}{:,4}; PM25{1,1}{:,4}];
@@ -209,24 +183,15 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     X = zeros(n1, 1, T);
     %X_krig = zeros(size(dati_test_NOX, 1), 1, T);
     for i=1:T
-        if is_weekend(i) == 0
-            %creiamo una matrice n_stazioni x 1
-            X(:,1,i) = zeros(n1,1);
-            %X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
-        else
-            X(:,1,i) = ones(n1,1);
-            %X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
-        end 
-        X(:,2,i) = NOx_lat;
-        X(:,3,i) = NOx_long;  
-        X(:,4,i) = NOx_alt; 
+        X(:,1,i) = NOx_lat;
+        X(:,2,i) = NOx_alt; 
         %X_krig(:,2,i) = NOx_lat_test;
         %X_krig(:,3,i) = NOx_long_test;
         %X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1);
         %X_krig(:,5,i) = NOx_alt_test;
     end
     ground.X_beta{1} = X;
-    ground.X_beta_name{1} = {'weekend', 'lat', 'long','alt'};
+    ground.X_beta_name{1} = {'lat', 'alt'};
     ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant','alt'};
     %ground.X_beta_krig{1} = X_krig;
     
@@ -236,25 +201,15 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     X = zeros(n2, 1, T);
     X_krig = zeros(size(dati_test_PM25, 1), 1, T);
     for i=1:T
-        if is_weekend(i) == 0
-            %creiamo una matrice n_stazioni x 1
-            X(:,1,i) = zeros(n2,1);
-            X_krig(:,1,i) = zeros(size(dati_test_PM25, 1),1);      
-        else
-            X(:,1,i) = ones(n2,1);
-            X_krig(:,1,i) = ones(size(dati_test_PM25, 1),1);        
-        end
-        X(:,2,i) = PM25_lat_train;
-        X(:,3,i) = PM25_long_train;
-        X(:,4,i) = PM25_alt_train;
-        X_krig(:,2,i) = PM25_lat_test;
-        X_krig(:,3,i) = PM25_long_test; 
-        X_krig(:,4,i) = ones(size(dati_test_PM25, 1),1); 
-        X_krig(:,5,i) = PM25_alt_test; 
+        X(:,1,i) = PM25_lat_train;
+        X(:,2,i) = PM25_alt_train;
+        X_krig(:,1,i) = PM25_lat_test;
+        X_krig(:,2,i) = ones(size(dati_test_PM25, 1),1); 
+        X_krig(:,3,i) = PM25_alt_test; 
     end
     ground.X_beta{2} = X;
-    ground.X_beta_name{2} = {'weekend', 'lat', 'long','alt'};
-    ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant','alt'};
+    ground.X_beta_name{2} = {'lat', 'alt'};
+    ground.X_beta_name_krig{2} = {'lat', 'constant','alt'};
     ground.X_beta_krig{2} = X_krig;
     
     
@@ -309,12 +264,13 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     obj_stem_model.stem_data.standardize;
     
     %Starting values
-    obj_stem_par.beta = obj_stem_model.get_beta0();
-    obj_stem_par.theta_z = 0.1;
-    obj_stem_par.v_z = eye(2)*0.1;
-    obj_stem_par.sigma_eta = diag([0.02 0.02]);
-    obj_stem_par.G = diag(0.9*ones(2,1));
-    obj_stem_par.sigma_eps = diag([0.01 0.3]); 
+    beta = obj_stem_model.get_beta0();
+    obj_stem_par.beta = beta;
+    obj_stem_par.theta_z = theta_z;
+    obj_stem_par.v_z = v_z;
+    obj_stem_par.sigma_eta = sigma_eta;
+    obj_stem_par.G = G;
+    obj_stem_par.sigma_eps = sigma_eps;  
     
     obj_stem_model.set_initial_values(obj_stem_par);
     
@@ -387,10 +343,41 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
 end
 
-mean(R2_cv)
-nanmean(rmse_cv)
-nanmean(log_likelihood_cv)
 
+%Calcolo delle t_stat
+t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+t = size(dati_NOX,1);
+for c =1:size(beta_cv, 2)
+    for r = 1:size(beta_cv,1)
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c+t}(r,1)));
+        disp(t_stat(r,c))
+    end
+end
+
+mean(R2_cv)
+mean(rmse_cv)
+
+%media delle t_stat
+mean(t_stat, 2)
+
+%% Significativi NOX lat alt, PM10 lat alt
+
+%% salvataggio in .mat
+result_data_biavariate_PM10_selected{1} = beta_cv;
+result_data_biavariate_PM10_selected{2} = theta_z_cv;
+result_data_biavariate_PM10_selected{3} = v_z_cv;
+result_data_biavariate_PM10_selected{4} = sigma_eta_cv;
+result_data_biavariate_PM10_selected{5} = G_cv;
+result_data_biavariate_PM10_selected{6} = sigma_eps_cv;
+result_data_biavariate_PM10_selected{7} = diag_varcov_cv;
+result_data_biavariate_PM10_selected{8} = log_likelihood_cv;
+result_data_biavariate_PM10_selected{9} = t_stat;
+
+save("result_data_bivariate_PM10_selected.mat", 'result_data_biavariate_PM10_selected')
+
+%% Significativi lat e alt per entrambi
+
+%% Grafici
 madrid = shaperead('madrid-districtsgeojson.shp');
 
 figure
@@ -418,7 +405,7 @@ end
 a = load('./kriging_regulaGrid_elevations.csv');
 
 X_krig = zeros(56*56, 1, T);
-is_weekend = is_weekend(:,14:24:end)  
+is_weekend = is_weekend(:,14:24:end);
 
 for i=1:T    
     X_krig(:,1,i) = a(1:end,1);

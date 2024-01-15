@@ -15,7 +15,7 @@ rng(4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 NOX = dati_pollutants_2019(7, 2:end);
-PM25 = dati_pollutants_2019(5, 2:end);
+PM25 = dati_pollutants_2019(6, 2:end);
 
 
 %% RIMOZIONE STAZIONI CHE NON HANNO MISURAZIONI IN TUTTI I MESI DELLA ANNO
@@ -153,9 +153,9 @@ log_likelihood_cv = [];
 beta = [];
 theta_z = 0.1;
 v_z = 0.2*eye(2);
-sigma_eta = [1 1];
+sigma_eta = diag([1 1]);
 G = 0.9*eye(2);
-sigma_eps = [0.1 0.1]; 
+sigma_eps = diag([0.1 0.1]); 
 
 totali_lat = [NOX{1,1}{:,3}; PM25{1,1}{:,3}];
 totali_long = [NOX{1,1}{:,4}; PM25{1,1}{:,4}];
@@ -309,12 +309,13 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     obj_stem_model.stem_data.standardize;
     
     %Starting values
-    obj_stem_par.beta = obj_stem_model.get_beta0();
-    obj_stem_par.theta_z = 0.1;
-    obj_stem_par.v_z = eye(2)*0.1;
-    obj_stem_par.sigma_eta = diag([0.02 0.02]);
-    obj_stem_par.G = diag(0.9*ones(2,1));
-    obj_stem_par.sigma_eps = diag([0.01 0.3]); 
+    beta = obj_stem_model.get_beta0();
+    obj_stem_par.beta = beta;
+    obj_stem_par.theta_z = theta_z;
+    obj_stem_par.v_z = v_z;
+    obj_stem_par.sigma_eta = sigma_eta;
+    obj_stem_par.G = G;
+    obj_stem_par.sigma_eps = sigma_eps; 
     
     obj_stem_model.set_initial_values(obj_stem_par);
     
@@ -387,10 +388,39 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
 end
 
-mean(R2_cv)
-nanmean(rmse_cv)
-nanmean(log_likelihood_cv)
 
+%Calcolo delle t_stat
+t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+t = size(dati_NOX,1);
+for c =1:size(beta_cv, 2)
+    for r = 1:size(beta_cv,1)
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c+t}(r,1)));
+        disp(t_stat(r,c))
+    end
+end
+
+mean(R2_cv)
+mean(rmse_cv)
+
+%media delle t_stat
+mean(t_stat, 2)
+
+%% Significativi NOX lat alt, PM10 lat alt
+
+%% salvataggio in .mat
+result_data_biavariate_PM10{1} = beta_cv;
+result_data_biavariate_PM10{2} = theta_z_cv;
+result_data_biavariate_PM10{3} = v_z_cv;
+result_data_biavariate_PM10{4} = sigma_eta_cv;
+result_data_biavariate_PM10{5} = G_cv;
+result_data_biavariate_PM10{6} = sigma_eps_cv;
+result_data_biavariate_PM10{7} = diag_varcov_cv;
+result_data_biavariate_PM10{8} = log_likelihood_cv;
+result_data_biavariate_PM10{9} = t_stat;
+
+save("result_data_bivariate_PM10.mat", 'result_data_biavariate_PM10')
+
+%% grafici
 madrid = shaperead('madrid-districtsgeojson.shp');
 
 figure
@@ -469,7 +499,7 @@ geoshow(obj_stem_krig_result{2,1}.stem_grid_sites.coordinate(:,1), obj_stem_krig
 figure
 colorbar
 hold on
-h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),sqrt(obj_stem_krig_result{2,1}.diag_Var_y_hat(:,:,9)),'DisplayType','texturemap')
+h = mapshow(reshape(a(1:end,2),56,56),reshape(a(1:end,1),56,56),sqrt(obj_stem_krig_result{2,1}.diag_Var_y_hat(:,:,9)),'DisplayType','texturemap');
 set(h,'FaceColor','flat')
 colorbar;
 %caxis([0 20])

@@ -15,12 +15,12 @@ rng(4);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 NOX = dati_pollutants_2019(7, 2:end);
-PM25 = dati_pollutants_2019(5, 2:end);
+PM25 = dati_pollutants_2019(6, 2:end);
 
-VEL_VENTO = dati_meteo_2019(2, 2:end)
-UMIDITA = dati_meteo_2019(5, 2:end)
-TEMPERATURA = dati_meteo_2019(4, 2:end)
-PRESSIONE = dati_meteo_2019(6, 2:end)
+VEL_VENTO = dati_meteo_2019(2, 2:end);
+UMIDITA = dati_meteo_2019(5, 2:end);
+TEMPERATURA = dati_meteo_2019(4, 2:end);
+PRESSIONE = dati_meteo_2019(6, 2:end);
 
 
 %% RIMOZIONE STAZIONI CHE NON HANNO MISURAZIONI IN TUTTI I MESI DELLA ANNO
@@ -238,7 +238,6 @@ for mese = 1:12
     end
 end
 
-%% Rimozione del doppio sensore su una sola stazione
 for mese = 1:12
     TEMPERATURA{1,mese}(end, :) = [];
     TEMPERATURA{1,mese}(end-2, :) = [];
@@ -283,12 +282,12 @@ for i = 1:size(NOX, 2)
     dati_PRESSIONE = [dati_PRESSIONE colonne_numeriche];
 end
 
-dati_PM25 = dati_PM25(:,14:24:end)  
-dati_NOX = dati_NOX(:,14:24:end)  
-dati_VELVENTO = dati_VELVENTO(:,14:24:end)  
-dati_UMIDITA= dati_UMIDITA(:,14:24:end)  
-dati_TEMPERATURA = dati_TEMPERATURA(:,14:24:end)  
-dati_PRESSIONE = dati_PRESSIONE(:,14:24:end)  
+dati_PM25 = dati_PM25(:,14:24:end);
+dati_NOX = dati_NOX(:,14:24:end);
+dati_VELVENTO = dati_VELVENTO(:,14:24:end);  
+dati_UMIDITA= dati_UMIDITA(:,14:24:end);  
+dati_TEMPERATURA = dati_TEMPERATURA(:,14:24:end);  
+dati_PRESSIONE = dati_PRESSIONE(:,14:24:end);  
 
 % creazione vettore covariata is_weekend
 % 1 gennaio 2019 era martedì
@@ -308,7 +307,6 @@ for i = 4*24+1:size(is_weekend,2) % itero tutte le ore dell'anno
         end
     end    
 end
-
 
 % LOOGCV NOX
 indici_totali = 1:size(dati_NOX, 1)+size(dati_PM25,1);
@@ -342,37 +340,38 @@ sigma_eps = eye(6,6).*[0.13, 0.43, 0.004, 0.04, 0.06, 0.08];
 totali_lat = [NOX{1,1}{:,3}; PM25{1,1}{:,3}];
 totali_long = [NOX{1,1}{:,4}; PM25{1,1}{:,4}];
 
-for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
+
+for l = 1:size(dati_NOX, 1)
     indici_righe_test = l;
     indici_righe_train = setdiff(indici_totali, indici_righe_test);
 
-    NOx_lat = NOX{1,1}{:,3};
-    NOx_long = NOX{1,1}{:,4};
-    NOx_alt = NOX{1,1}{:,2};    
+    NOx_lat_train = NOX{1,1}{:,3}(indici_righe_train(1,1:size(dati_NOX, 1)-1));
+    NOx_long_train = NOX{1,1}{:,4}(indici_righe_train(1,1:size(dati_NOX, 1)-1));
+    NOx_alt_train = NOX{1,1}{:,2}(indici_righe_train(1,1:size(dati_NOX, 1)-1));
     
-    PM25_lat_train = PM25{1,1}{:,3}(indici_righe_train(1,size(dati_NOX, 1)+1:end)-ones(size(dati_PM25,1)-1,1)'*size(dati_NOX,1));
-    PM25_long_train = PM25{1,1}{:,4}(indici_righe_train(1,size(dati_NOX, 1)+1:end)-ones(size(dati_PM25,1)-1,1)'*size(dati_NOX,1));
-    PM25_alt_train = PM25{1,1}{:,2}(indici_righe_train(1,size(dati_NOX, 1)+1:end)-ones(size(dati_PM25,1)-1,1)'*size(dati_NOX,1));
+    NOx_lat_test =  NOX{1,1}{:,3}(indici_righe_test);
+    NOx_long_test =  NOX{1,1}{:,4}(indici_righe_test);
+    NOx_alt_test =  NOX{1,1}{:,2}(indici_righe_test);
     
-    PM25_lat_test =  PM25{1,1}{:,3}(indici_righe_test-size(dati_NOX,1));
-    PM25_long_test =  PM25{1,1}{:,4}(indici_righe_test-size(dati_NOX,1));
-    PM25_alt_test =  PM25{1,1}{:,2}(indici_righe_test-size(dati_NOX,1));
-       
+    PM25_lat = PM25{1,1}{:,3};
+    PM25_long = PM25{1,1}{:,4};
+    PM25_alt = PM25{1,1}{:,2};    
+
     % controllo che la stazione di test non sia in nessun dataset di
     % training
-    dati_train_NOX = dati_NOX;  
-    if sum(totali_lat == PM25_lat_test) > 1 & sum(totali_long == PM25_long_test) > 1        
-        NOx_lat = setdiff(NOx_lat, PM25_lat_test);
-        NOx_long = setdiff(NOx_long, PM25_long_test);        
-        righe_da_togliere = NOX{1,1}{:,3} == PM25_lat_test;
-        NOx_alt = NOx_alt(not(righe_da_togliere));
-        dati_train_NOX = dati_train_NOX(not(righe_da_togliere),:);
+    dati_train_PM25 = dati_PM25;  
+    if sum(totali_lat == NOx_lat_test) > 1 & sum(totali_long == NOx_long_test) > 1
+        PM25_lat = setdiff(PM25_lat, NOx_lat_test, 'stable');
+        PM25_long = setdiff(PM25_long, NOx_long_test, 'stable');        
+        righe_da_togliere = PM25{1,1}{:,3} == NOx_lat_test;
+        PM25_alt = PM25_alt(not(righe_da_togliere));
+        dati_train_PM25 = dati_train_PM25(not(righe_da_togliere),:);
     end
 
     % Estrazione dati train e test
-    dati_train_PM25 = dati_PM25(indici_righe_train(1,size(dati_NOX, 1)+1:end)-ones(size(dati_PM25,1)-1,1)'*size(dati_NOX,1), :);
-    dati_test_PM25 = dati_PM25(indici_righe_test-size(dati_NOX,1), :);    
-     
+    dati_train_NOX = dati_NOX(indici_righe_train(1,1:size(dati_NOX, 1)-1), :);
+    dati_test_NOX = dati_NOX(indici_righe_test, :);
+
 
     %load no2 obs
     ground.Y{1} = dati_train_NOX;
@@ -407,54 +406,54 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     
     %matrice [stazioni x numero_covariate x giorni]
     X = zeros(n1, 1, T);
-    %X_krig = zeros(size(dati_test_NOX, 1), 1, T);
+    X_krig = zeros(size(dati_test_NOX, 1), 1, T);
     for i=1:T
         if is_weekend(i) == 0
             %creiamo una matrice n_stazioni x 1
             X(:,1,i) = zeros(n1,1);
-            %X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
+            X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
         else
             X(:,1,i) = ones(n1,1);
-            %X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
+            X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
         end 
-        X(:,2,i) = NOx_lat;
-        X(:,3,i) = NOx_long; 
-        X(:,4,i) = NOx_alt; 
-        %X_krig(:,2,i) = NOx_lat_test;
-        %X_krig(:,3,i) = NOx_long_test;
-        %X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1); 
-        %X_krig(:,5,i) = NOx_alt_test;
+        X(:,2,i) = NOx_lat_train;
+        X(:,3,i) = NOx_long_train; 
+        X(:,4,i) = NOx_alt_train; 
+        X_krig(:,2,i) = NOx_lat_test;
+        X_krig(:,3,i) = NOx_long_test;
+        X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1); 
+        X_krig(:,5,i) = NOx_alt_test;
     end
     ground.X_beta{1} = X;
     ground.X_beta_name{1} = {'weekend', 'lat', 'long','alt'};
-    %ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant','alt'};
-    %ground.X_beta_krig{1} = X_krig;
+    ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant','alt'};
+    ground.X_beta_krig{1} = X_krig;
     
     
     %matrice [stazioni x numero_covariate x giorni]
     X = zeros(n2, 1, T);
-    X_krig = zeros(size(dati_test_PM25, 1), 1, T);
+    %X_krig = zeros(size(dati_test_PM25, 1), 1, T);
     for i=1:T
         if is_weekend(i) == 0
             %creiamo una matrice n_stazioni x 1
             X(:,1,i) = zeros(n2,1);
-            X_krig(:,1,i) = zeros(size(dati_test_PM25, 1),1);      
+            %X_krig(:,1,i) = zeros(size(dati_test_PM25, 1),1);      
         else
             X(:,1,i) = ones(n2,1);
-            X_krig(:,1,i) = ones(size(dati_test_PM25, 1),1);        
+            %X_krig(:,1,i) = ones(size(dati_test_PM25, 1),1);        
         end
-        X(:,2,i) = PM25_lat_train;
-        X(:,3,i) = PM25_long_train;
-        X(:,4,i) = PM25_alt_train;
-        X_krig(:,2,i) = PM25_lat_test;
-        X_krig(:,3,i) = PM25_long_test; 
-        X_krig(:,4,i) = ones(size(dati_test_PM25, 1),1); 
-        X_krig(:,5,i) = PM25_alt_test; 
+        X(:,2,i) = PM25_lat;
+        X(:,3,i) = PM25_long;
+        X(:,4,i) = PM25_alt;
+        %X_krig(:,2,i) = PM25_lat(indici_righe_test2);
+        %X_krig(:,3,i) = PM25_long(indici_righe_test2); 
+       %X_krig(:,4,i) = ones(size(dati_test_PM25, 1),1); 
+       %X_krig(:,5,i) = PM25_alt(indici_righe_test2); 
     end
     ground.X_beta{2} = X;
     ground.X_beta_name{2} = {'weekend', 'lat', 'long','alt'};
-    ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant','alt'};
-    ground.X_beta_krig{2} = X_krig;
+    %ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant','alt'};
+    %ground.X_beta_krig{2} = X_krig;
     
     
     TEMPERATURA_lat = TEMPERATURA{1,1}{:,3};
@@ -555,13 +554,21 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     
     obj_stem_gridlist_p = stem_gridlist();
     
-    ground.coordinates{1} = [NOx_lat, NOx_long];
-    ground.coordinates{2} = [PM25_lat_train, PM25_long_train];
+    ground.coordinates{1} = [NOx_lat_train, NOx_long_train];
+    ground.coordinates{2} = [PM25_lat, PM25_long];
     ground.coordinates{3} = [TEMPERATURA_lat, TEMPERATURA_long];
     ground.coordinates{4} = [UMIDITA_lat, UMIDITA_long];
     ground.coordinates{5} = [VEL_VENTO_lat, VEL_VENTO_long];
     ground.coordinates{6} = [PRESSIONE_lat, PRESSIONE_long];
+
+    %% check intersezione
+    tot = [NOx_lat_test; NOx_lat_train;  UMIDITA_lat; TEMPERATURA_lat; VEL_VENTO_lat; PRESSIONE_lat];
+    tot1 = [NOx_lat_test; NOx_lat_train];
     
+    totmeteo = [ UMIDITA_lat; TEMPERATURA_lat; VEL_VENTO_lat; PRESSIONE_lat];
+
+    size(unique(tot1))
+    size(unique(totmeteo))
     
     obj_stem_grid1 = stem_grid(ground.coordinates{1}, 'deg', 'sparse', 'point');
     obj_stem_grid2 = stem_grid(ground.coordinates{2}, 'deg', 'sparse', 'point');
@@ -608,18 +615,19 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     obj_stem_model.stem_data.standardize;
     
     %Starting values
-    obj_stem_par.beta = obj_stem_model.get_beta0();
-    obj_stem_par.theta_z = 0.1;
-    obj_stem_par.v_z = rand(6,6)*0.1 + eye(6);
-    obj_stem_par.sigma_eta = diag([0.02 0.02 0.1 0.1 0.1 0.1]);
-    obj_stem_par.G = diag(0.9*ones(6,1));
-    obj_stem_par.sigma_eps = diag([0.01 0.3 0.02 0.1 0.1 0.2]); 
+    beta = obj_stem_model.get_beta0();
+    obj_stem_par.beta = beta;
+    obj_stem_par.theta_z = theta_z;
+    obj_stem_par.v_z = v_z;
+    obj_stem_par.sigma_eta = sigma_eta;
+    obj_stem_par.G = G;
+    obj_stem_par.sigma_eps = sigma_eps; 
     
     obj_stem_model.set_initial_values(obj_stem_par);
     
     %Model estimation
     exit_toll = 0.001;
-    max_iterations = 200;
+    max_iterations = 400;
     obj_stem_EM_options = stem_EM_options();
     obj_stem_EM_options.max_iterations = max_iterations;
     obj_stem_EM_options.exit_tol_par = exit_toll;
@@ -636,13 +644,12 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     
     %% Kriging on validation stations
     
-    % KRINGING PM25
-    krig_coordinates_PM25 = [PM25_lat_test, PM25_long_test];
+    % KRINGING NOX
+    krig_coordinates = [NOx_lat_test, NOx_long_test];
     
-    obj_stem_krig_grid = stem_grid(krig_coordinates_PM25, 'deg', 'sparse','point');
+    obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'sparse','point');
     
-    
-    obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,2}, ground.X_beta_name_krig{1,2});
+    obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1});
     obj_stem_krig = stem_krig(obj_stem_model, obj_stem_krig_data);
     
     obj_stem_krig_options = stem_krig_options();
@@ -651,17 +658,17 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     obj_stem_krig_result = obj_stem_krig.kriging(obj_stem_krig_options);
     
     %calcolo dell'RMSE e R2
-    y_hat_pm25 = obj_stem_krig_result{2,1}.y_hat;
+    y_hat_nox = obj_stem_krig_result{1,1}.y_hat;
     
     % prendiamo le y originali
-    rmse_pm25 = [];
-    r2_pm25 = [];
+    rmse_nox = [];
+    r2_nox = [];
     
-    rmse_pm25 = nanstd(dati_test_PM25 - y_hat_pm25,1,2);
+    rmse_nox = nanstd(dati_test_NOX - y_hat_nox,1,2)
     
-    r2_pm25 = 1 - nanvar(dati_test_PM25 - y_hat_pm25,1,2)./nanvar(dati_test_PM25,1,2);
-    rmse_tot = mean(rmse_pm25);
-    r2_tot = mean(r2_pm25);
+    r2_nox = 1 - nanvar(dati_test_NOX - y_hat_nox,1,2)./nanvar(dati_test_NOX,1,2);
+    rmse_tot = mean(rmse_nox)
+    r2_tot = mean(r2_nox)
 
      %concateniamo rmse_cv e R2
     rmse_cv = [rmse_cv rmse_tot];
@@ -685,5 +692,35 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     sigma_eps_cv = [sigma_eps_cv sigma_eps];
     diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
     log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
-    disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
+    disp(["CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l)]);
 end
+
+
+%Calcolo delle t_stat
+t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+for c =1:size(beta_cv, 2)
+    for r = 1:size(beta_cv,1)
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c}(r,1)));
+        disp(t_stat(r,c))
+    end
+end
+
+mean(R2_cv)
+mean(rmse_cv)
+
+%media delle t_stat
+mean(t_stat, 2)
+
+%% salvataggio in .mat
+result_data_multivariato_meteo_NOX{1} = beta_cv;
+result_data_multivariato_meteo_NOX{2} = theta_z_cv;
+result_data_multivariato_meteo_NOX{3} = v_z_cv;
+result_data_multivariato_meteo_NOX{4} = sigma_eta_cv;
+result_data_multivariato_meteo_NOX{5} = G_cv;
+result_data_multivariato_meteo_NOX{6} = sigma_eps_cv;
+result_data_multivariato_meteo_NOX{7} = diag_varcov_cv;
+result_data_multivariato_meteo_NOX{8} = log_likelihood_cv;
+result_data_multivariato_meteo_NOX{9} = t_stat;
+
+save("result_data_multivariato_meteo_NOX.mat", 'result_data_multivariato_meteo_NOX')
+ 
