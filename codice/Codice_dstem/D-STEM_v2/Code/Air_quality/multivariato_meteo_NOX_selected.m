@@ -238,7 +238,6 @@ for mese = 1:12
     end
 end
 
-%% Rimozione stazioni con due sensori
 for mese = 1:12
     TEMPERATURA{1,mese}(end, :) = [];
     TEMPERATURA{1,mese}(end-2, :) = [];
@@ -324,7 +323,7 @@ diag_varcov_cv = {};
 log_likelihood_cv = [];
 
 %Setting parametri inziali
-beta = [-0.1, 0.3, -0.6, 0.2, -0.2, -0.0, -0.0, -0.0, -0.0, -0.1, -0.1, -0.1, 0.0, 0.1, -0.4, -0.2, 0.3, -0.0, -0.1, -0.4];
+beta = [];
 theta_z = 0.65;
 v_z = [
     1.4  0.2  0.4  0.1 -0.3  0.1;
@@ -409,25 +408,18 @@ for l = 1:size(dati_NOX, 1)
     X = zeros(n1, 1, T);
     X_krig = zeros(size(dati_test_NOX, 1), 1, T);
     for i=1:T
-        if is_weekend(i) == 0
-            %creiamo una matrice n_stazioni x 1
-            X(:,1,i) = zeros(n1,1);
-            X_krig(:,1,i) = zeros(size(dati_test_NOX, 1),1);
-        else
-            X(:,1,i) = ones(n1,1);
-            X_krig(:,1,i) = ones(size(dati_test_NOX, 1),1);
-        end 
-        X(:,2,i) = NOx_lat_train;
-        X(:,3,i) = NOx_long_train; 
-        X(:,4,i) = NOx_alt_train; 
-        X_krig(:,2,i) = NOx_lat_test;
-        X_krig(:,3,i) = NOx_long_test;
-        X_krig(:,4,i) = ones(size(dati_test_NOX, 1),1); 
-        X_krig(:,5,i) = NOx_alt_test;
+        
+        X(:,1,i) = NOx_lat_train;
+        X(:,2,i) = NOx_long_train; 
+        X(:,3,i) = NOx_alt_train; 
+        X_krig(:,1,i) = NOx_lat_test;
+        X_krig(:,2,i) = NOx_long_test;
+        X_krig(:,3,i) = ones(size(dati_test_NOX, 1),1); 
+        X_krig(:,4,i) = NOx_alt_test;
     end
     ground.X_beta{1} = X;
-    ground.X_beta_name{1} = {'weekend', 'lat', 'long','alt'};
-    ground.X_beta_name_krig{1} = {'weekend', 'lat', 'long', 'constant','alt'};
+    ground.X_beta_name{1} = {'lat', 'long','alt'};
+    ground.X_beta_name_krig{1} = {'lat', 'long', 'constant','alt'};
     ground.X_beta_krig{1} = X_krig;
     
     
@@ -435,25 +427,12 @@ for l = 1:size(dati_NOX, 1)
     X = zeros(n2, 1, T);
     %X_krig = zeros(size(dati_test_PM25, 1), 1, T);
     for i=1:T
-        if is_weekend(i) == 0
-            %creiamo una matrice n_stazioni x 1
-            X(:,1,i) = zeros(n2,1);
-            %X_krig(:,1,i) = zeros(size(dati_test_PM25, 1),1);      
-        else
-            X(:,1,i) = ones(n2,1);
-            %X_krig(:,1,i) = ones(size(dati_test_PM25, 1),1);        
-        end
-        X(:,2,i) = PM25_lat;
-        X(:,3,i) = PM25_long;
-        X(:,4,i) = PM25_alt;
-        %X_krig(:,2,i) = PM25_lat(indici_righe_test2);
-        %X_krig(:,3,i) = PM25_long(indici_righe_test2); 
-       %X_krig(:,4,i) = ones(size(dati_test_PM25, 1),1); 
-       %X_krig(:,5,i) = PM25_alt(indici_righe_test2); 
+      
+        X(:,1,i) = PM25_lat;         
     end
     ground.X_beta{2} = X;
-    ground.X_beta_name{2} = {'weekend', 'lat', 'long','alt'};
-    ground.X_beta_name_krig{2} = {'weekend', 'lat', 'long', 'constant','alt'};
+    ground.X_beta_name{2} = {'lat'};
+    ground.X_beta_name_krig{2} = {'lat','constant'};
     ground.X_beta_krig{2} = X;
     
     
@@ -463,26 +442,20 @@ for l = 1:size(dati_NOX, 1)
     %matrice [stazioni x numero_covariate x giorni]
     X = zeros(n3, 1, T);
     for i=1:T  
-        X(:,1,i) = TEMPERATURA_lat;
-        X(:,2,i) = TEMPERATURA_long;
-        X(:,3,i) = TEMPERATURA_alt;
+        X(:,1,i) = TEMPERATURA_alt;
     end
     ground.X_beta{3} = X;
-    ground.X_beta_name{3} = {'lat', 'long','alt'};
+    ground.X_beta_name{3} = {'alt'};
     ground.X_beta_krig{3} = X;
     
     UMIDITA_lat = UMIDITA{1,1}{:,3};
     UMIDITA_long = UMIDITA{1,1}{:,4};
     UMIDITA_alt = UMIDITA{1,1}{:,2};
     %matrice [stazioni x numero_covariate x giorni]
-    X = zeros(n4, 1, T);
-    for i=1:T  
-        X(:,1,i) = UMIDITA_lat;
-        X(:,2,i) = UMIDITA_long;
-        X(:,3,i) = UMIDITA_alt;
-    end
+    X = ones(n4, 1, T);
+    
     ground.X_beta{4} = X;
-    ground.X_beta_name{4} = {'lat', 'long','alt'};
+    ground.X_beta_name{4} = {'constant'};
     ground.X_beta_krig{4} = X;
     
     
@@ -507,12 +480,11 @@ for l = 1:size(dati_NOX, 1)
     %matrice [stazioni x numero_covariate x giorni]
     X = zeros(n6, 1, T);
     for i=1:T
-        X(:,1,i) = PRESSIONE_lat;
-        X(:,2,i) = PRESSIONE_long;
-        X(:,3,i) = PRESSIONE_alt;
+        X(:,1,i) = PRESSIONE_long;
+        X(:,2,i) = PRESSIONE_alt;
     end
     ground.X_beta{6} = X;
-    ground.X_beta_name{6} = {'lat', 'long','alt'};
+    ground.X_beta_name{6} = {'long','alt'};
     ground.X_beta_krig{6} = X;
     
     
@@ -718,17 +690,17 @@ mean([rmse_cv(1:4) rmse_cv(6:end)])
 mean([t_stat(:, 1:4) t_stat(:, 6:end)], 2)
 
 %% salvataggio in .mat
-result_data_multivariato_meteo_NOX{1} = beta_cv;
-result_data_multivariato_meteo_NOX{2} = theta_z_cv;
-result_data_multivariato_meteo_NOX{3} = v_z_cv;
-result_data_multivariato_meteo_NOX{4} = sigma_eta_cv;
-result_data_multivariato_meteo_NOX{5} = G_cv;
-result_data_multivariato_meteo_NOX{6} = sigma_eps_cv;
-result_data_multivariato_meteo_NOX{7} = diag_varcov_cv;
-result_data_multivariato_meteo_NOX{8} = log_likelihood_cv;
-result_data_multivariato_meteo_NOX{9} = t_stat;
+result_data_multivariato_meteo_NOX_selected{1} = beta_cv;
+result_data_multivariato_meteo_NOX_selected{2} = theta_z_cv;
+result_data_multivariato_meteo_NOX_selected{3} = v_z_cv;
+result_data_multivariato_meteo_NOX_selected{4} = sigma_eta_cv;
+result_data_multivariato_meteo_NOX_selected{5} = G_cv;
+result_data_multivariato_meteo_NOX_selected{6} = sigma_eps_cv;
+result_data_multivariato_meteo_NOX_selected{7} = diag_varcov_cv;
+result_data_multivariato_meteo_NOX_selected{8} = log_likelihood_cv;
+result_data_multivariato_meteo_NOX_selected{9} = t_stat;
 
-save("result_data_multivariato_meteo_NOX.mat", 'result_data_multivariato_meteo_NOX')
+save("result_data_multivariato_meteo_NOX_selected.mat", 'result_data_multivariato_meteo_NOX_selected')
 
 %% Significativi  
  

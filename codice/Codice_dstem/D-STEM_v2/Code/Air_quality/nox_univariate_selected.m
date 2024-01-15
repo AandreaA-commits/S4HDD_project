@@ -287,7 +287,7 @@ for l = 1:size(dati_NOX, 1)
     sigma_eps_cv = [sigma_eps_cv sigma_eps];
     diag_varcov_cv{1,l} = diag(obj_stem_model.stem_EM_result.stem_par.varcov);
     log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
-    disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
+    disp(["CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l) ]);
 
 end
 
