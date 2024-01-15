@@ -237,7 +237,7 @@ for l = 1:size(dati_NOX, 1)
     
     %Model estimation
     exit_toll = 0.001;
-    max_iterations = 200;
+    max_iterations = 400;
     obj_stem_EM_options = stem_EM_options();
     obj_stem_EM_options.max_iterations = max_iterations;
     obj_stem_EM_options.exit_tol_par = exit_toll;
@@ -301,12 +301,36 @@ for l = 1:size(dati_NOX, 1)
 
 end
 
-mean(rmse_cv)
+%Calcolo delle t_stat
+t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+for c =1:size(beta_cv, 2)
+    for r = 1:size(beta_cv,1)
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c}(r,1)));
+        disp(t_stat(r,c))
+    end
+end
+
 mean(R2_cv)
-mean(log_likelihood_cv)
+mean(rmse_cv)
 
-obj_stem_model.print
+%media delle t_stat
+mean(t_stat, 2)
 
+%% Significativi lat e alt
+
+
+%% salvataggio in .mat
+result_data_nox_univariate{1} = beta_cv;
+result_data_nox_univariate{2} = theta_z_cv;
+result_data_nox_univariate{3} = v_z_cv;
+result_data_nox_univariate{4} = sigma_eta_cv;
+result_data_nox_univariate{5} = G_cv;
+result_data_nox_univariate{6} = sigma_eps_cv;
+result_data_nox_univariate{7} = diag_varcov_cv;
+result_data_nox_univariate{8} = log_likelihood_cv;
+result_data_nox_univariate{9} = t_stat;
+
+save("result_data_nox_univariate.mat", 'result_data_nox_univariate')
 
 
 

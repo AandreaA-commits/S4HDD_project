@@ -227,7 +227,7 @@ for l = 1:size(dati_NOX, 1)
     
     %Model estimation
     exit_toll = 0.001;
-    max_iterations = 200;
+    max_iterations = 400;
     obj_stem_EM_options = stem_EM_options();
     obj_stem_EM_options.max_iterations = max_iterations;
     obj_stem_EM_options.exit_tol_par = exit_toll;
@@ -291,11 +291,20 @@ for l = 1:size(dati_NOX, 1)
 
 end
 
-mean(rmse_cv)
-mean(R2_cv)
-mean(log_likelihood_cv)
+%Calcolo delle t_stat
+t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+for c =1:size(beta_cv, 2)
+    for r = 1:size(beta_cv,1)
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c}(r,1)));
+        disp(t_stat(r,c))
+    end
+end
 
-obj_stem_model.print
+mean(R2_cv)
+mean(rmse_cv)
+
+%media delle t_stat
+mean(t_stat, 2)
 
 %% salvataggio in .mat
 result_data_nox_univariate_selected{1} = beta_cv;
@@ -306,6 +315,7 @@ result_data_nox_univariate_selected{5} = G_cv;
 result_data_nox_univariate_selected{6} = sigma_eps_cv;
 result_data_nox_univariate_selected{7} = diag_varcov_cv;
 result_data_nox_univariate_selected{8} = log_likelihood_cv;
+result_data_nox_univariate_selected{9} = t_stat;
 
 save("result_data_nox_univariate_selected.mat", 'result_data_nox_univariate_selected')
 

@@ -15,7 +15,7 @@ rng(4);
 %      Data  building     %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-PM25 = dati_pollutants_2019(5, 2:end);
+PM25 = dati_pollutants_2019(6, 2:end);
 
 %% RIMOZIONE STAZIONI CHE NON HANNO MISURAZIONI IN TUTTI I MESI DELLA ANNO
 % PM25
@@ -298,6 +298,8 @@ for l = 1:size(dati_PM25, 1)
 
 end
 
+%% Significativi lat e long
+
   %% Prova digrafico
     madrid = shaperead('madrid-districtsgeojson.shp');
     
@@ -310,11 +312,43 @@ end
         geoplot(madrid(i).Y, madrid(i).X, "k-");
     end
     
-    
-%utilizzare geoplot per fare delle linee sulla mappa
-    
+
+%Calcolo delle t_stat
+t_stat = zeros(size(beta_cv,1), size(beta_cv, 2));
+for c =1:size(beta_cv, 2)
+    for r = 1:size(beta_cv,1)
+        t_stat(r,c) = abs(beta_cv(r,c)/sqrt(diag_varcov_cv{1,c}(r,1)));
+        disp(t_stat(r,c))
+    end
+end
+
 mean(R2_cv)
 mean(rmse_cv)
 
+%media delle t_stat
+mean(t_stat, 2)
+
 %Vedere quale è la migliore in cross-validazione e rimuoviamo i regressori
 %inutili
+
+%Nessun regressore è significativo
+
+obj_stem_model.print
+
+%Salvataggiodati
+result_data_pm10_univariate{1} = beta_cv;
+result_data_pm10_univariate{2} = theta_z_cv;
+result_data_pm10_univariate{3} = v_z_cv;
+result_data_pm10_univariate{4} = sigma_eta_cv;
+result_data_pm10_univariate{5} = G_cv;
+result_data_pm10_univariate{6} = sigma_eps_cv;
+result_data_pm10_univariate{7} = diag_varcov_cv;
+result_data_pm10_univariate{8} = log_likelihood_cv;
+result_data_pm10_univariate{9} = t_stat;
+
+save("result_data_pm10_univariate.mat", 'result_data_pm10_univariate')
+
+
+
+
+

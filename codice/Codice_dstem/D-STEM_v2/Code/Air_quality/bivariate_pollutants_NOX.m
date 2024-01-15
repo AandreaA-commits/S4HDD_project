@@ -125,10 +125,10 @@ log_likelihood_cv = [];
 %Setting parametri inziali
 beta = [];
 theta_z = 0.1;
-v_z = 0.2;
-sigma_eta = 1;
-G = 0.9;
-sigma_eps = 0.1; 
+v_z = 0.2*eye(2);
+sigma_eta = [1 1];
+G = 0.9*eye(2);
+sigma_eps = [0.1 0.1]; 
 
 totali_lat = [NOX{1,1}{:,3}; PM25{1,1}{:,3}];
 totali_long = [NOX{1,1}{:,4}; PM25{1,1}{:,4}];

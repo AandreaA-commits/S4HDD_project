@@ -689,3 +689,4 @@ for l = 1:size(dati_NOX, 1)
     log_likelihood_cv = [log_likelihood_cv obj_stem_model.stem_EM_result.logL];
     disp("CROSS-VALIDATION: Iterazione LOOGCV numero: ", num2str(l));
 end
+ 
