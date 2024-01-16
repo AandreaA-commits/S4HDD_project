@@ -316,7 +316,8 @@ result_data_nox_univariate_selected{6} = sigma_eps_cv;
 result_data_nox_univariate_selected{7} = diag_varcov_cv;
 result_data_nox_univariate_selected{8} = log_likelihood_cv;
 result_data_nox_univariate_selected{9} = t_stat;
-
+result_data_nox_univariate_selected{10} = R2_cv;
+result_data_nox_univariate_selected{11} = rmse_cv;
 save("result_data_nox_univariate_selected.mat", 'result_data_nox_univariate_selected')
 
 %% Prova digrafico

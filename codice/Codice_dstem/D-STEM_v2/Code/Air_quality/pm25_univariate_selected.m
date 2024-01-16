@@ -388,7 +388,44 @@ result_data_pm10_univariate_selected{6} = sigma_eps_cv;
 result_data_pm10_univariate_selected{7} = diag_varcov_cv;
 result_data_pm10_univariate_selected{8} = log_likelihood_cv;
 result_data_pm10_univariate_selected{9} = t_stat;
+result_data_pm10_univariate_selected{10} = R2_cv;
+result_data_pm10_univariate_selected{11} = rmse_cv;
 
 save("result_data_pm10_univariate_selected.mat", 'result_data_pm10_univariate_selected')
 
 
+
+for k=1:size(dati_PM25, 1)
+    % modello regARIMA(2,0,2) 
+    %standardizzo i dati
+    m = nanmean(dati_PM25(2,:));
+    s = nanstd(dati_PM25(2,:));
+
+    y_norm_train = (dati_PM25(2,:) - m)./s;
+
+    y_nomr_test
+
+    %autocorr(y_norm)
+    %parcorr(y_norm)
+
+    Mdl3 = regARIMA('ARLags',1:1, 'MALags', 1:2);
+    arma202 = estimate(Mdl3, dati_PM25(2,:)');
+    res_arma202 = infer(arma202, dati_PM25(2,:)');
+    
+    mse = nanvar(res_arma202);
+    R2 = 1- mse/nanvar(dati_PM25(2,:));
+
+    figure;
+    autocorr(res_arma202)
+
+    figure;
+    parcorr(res_arma202)
+
+    mean(res_arma202); % -0.03
+    lbqtest(res_arma202); %=0 incorrelato
+    jbtest(res_arma202); %=1 non normale
+    archtest(res_arma202); %=0 non eteroschedastici
+    plot(res_arma202)
+    
+    %POSSIBILE MODELLO MIGLIORE
+end
