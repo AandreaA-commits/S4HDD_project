@@ -308,7 +308,9 @@ mean([R2_cv(1:5) R2_cv(7:end)])
 mean([rmse_cv(1:5) rmse_cv(7:end)])
 mean([t_stat(:, 1:5) t_stat(:, 7:end)], 2)
 
-    %% Prova digrafico
+    
+    
+%% Prova digrafico
     madrid = shaperead('madrid-districtsgeojson.shp');
     
     figure
@@ -320,8 +322,6 @@ mean([t_stat(:, 1:5) t_stat(:, 7:end)], 2)
         geoplot(madrid(i).Y, madrid(i).X, "k-");
     end
     
-    
-    %utilizzare geoplot per fare delle linee sulla mappa
     
 
 

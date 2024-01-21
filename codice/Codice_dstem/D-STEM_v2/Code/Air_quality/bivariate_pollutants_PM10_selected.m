@@ -201,15 +201,15 @@ for l = size(dati_NOX, 1)+1:size(totali_lat, 1)
     X = zeros(n2, 1, T);
     X_krig = zeros(size(dati_test_PM25, 1), 1, T);
     for i=1:T
-        X(:,1,i) = PM25_lat_train;
-        X(:,2,i) = PM25_alt_train;
+       % X(:,1,i) = PM25_lat_train;
+        X(:,1,i) = PM25_alt_train;
         X_krig(:,1,i) = PM25_lat_test;
         X_krig(:,2,i) = ones(size(dati_test_PM25, 1),1); 
         X_krig(:,3,i) = PM25_alt_test; 
     end
     ground.X_beta{2} = X;
-    ground.X_beta_name{2} = {'lat', 'alt'};
-    ground.X_beta_name_krig{2} = {'lat', 'constant','alt'};
+    ground.X_beta_name{2} = { 'alt'};
+    ground.X_beta_name_krig{2} = { 'lat','constant','alt'};
     ground.X_beta_krig{2} = X_krig;
     
     

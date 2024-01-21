@@ -443,7 +443,7 @@ result_krig_univariato_PM10{4} = obj_stem_krig_result{1,1}.zk_s;
 save("result_krig_univariato_PM10.mat", 'result_krig_univariato_PM10');
 
 
-%% Bivariate NOX krig
+%% Bivariate krig
 clc
 clearvars
 
@@ -576,6 +576,7 @@ X = zeros(n1, 1, T);
 for i=1:T
     X(:,1,i) = NOx_lat;
     X(:,2,i) = NOx_alt; 
+   % X(:,3,i) = NOx_long;
 end
 
 ground.X_beta{1} = X;
@@ -584,11 +585,12 @@ ground.X_beta_name{1} = {'lat', 'alt'};
 %matrice [stazioni x numero_covariate x giorni]
 X = zeros(n2, 1, T);
 for i=1:T
-    X(:,1,i) = PM25_lat;
-    X(:,2,i) = PM25_alt; 
+    %X(:,1,i) = PM25_lat;
+    X(:,1,i) = PM25_alt; 
+    %X(:,3,i) = PM25_long;
 end
 ground.X_beta{2} = X;
-ground.X_beta_name{2} = {'lat', 'alt'};
+ground.X_beta_name{2} = {'alt'};
 
 
 %X_z
@@ -671,6 +673,13 @@ obj_stem_model.EM_estimate(obj_stem_EM_options);
 obj_stem_model.set_varcov;
 obj_stem_model.set_logL;    
 
+obj_stem_model.print
+
+%matrice correlazione
+d = sqrt(diag(obj_stem_model.stem_par.v_z).*eye(2));
+R = inv(d)*obj_stem_model.stem_par.v_z*inv(d);  
+
+%%
 % KRIGING GRID COMPLETA
 a = load('./../kriging_regulaGrid_elevations.csv');
 
@@ -687,7 +696,7 @@ ground.X_beta_krig{1} = X_krig;
 
 krig_coordinates = [a(1:end,1), a(1:end,2)];
 
-obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'regular','pixel', [56, 56], 'square',0.75,0.75);
+obj_stem_krig_grid = stem_grid(krig_coordinates, 'deg', 'regular','pixel', [56, 56], 'square',0.00071,0.00071);
     
 obj_stem_krig_data = stem_krig_data(obj_stem_krig_grid, ground.X_beta_krig{1,1}, ground.X_beta_name_krig{1,1}, []);
 obj_stem_krig = stem_krig(obj_stem_model,obj_stem_krig_data);
